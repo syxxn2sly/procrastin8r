@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 
 import { Icon } from "@/components/icon";
 import { Kicker, Screen, T, useTheme } from "@/components/ui";
@@ -13,7 +13,7 @@ const options: {
   icon: string;
   title: string;
   sub: string;
-  route: string;
+  route: Href;
   accentIcon?: boolean;
 }[] = [
   {
