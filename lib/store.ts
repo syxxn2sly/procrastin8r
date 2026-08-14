@@ -125,6 +125,7 @@ const rollDay = (s: State): State => ({
   crisisAnchorDone: false,
   schedDone: {},
   accepted: {},
+  hiddenBlocks: {},
 });
 
 export const fmtTime = (m: number) => {

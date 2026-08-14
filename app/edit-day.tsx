@@ -5,8 +5,12 @@ import { router } from "expo-router";
 import { Icon } from "@/components/icon";
 import { Btn, Card, Field, IconBtn, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
+import { defaultBlockTime } from "@/lib/schedule";
 import { fmtTime, useStore } from "@/lib/store";
 import type { AnchorTimes } from "@/lib/types";
+
+/** Keep every time inside the day so nudging can't push a block off the end. */
+const clampDay = (min: number) => Math.max(0, Math.min(23 * 60 + 30, min));
 
 type Row = {
   id: keyof AnchorTimes | "wake";
@@ -40,7 +44,28 @@ export default function EditDay() {
   const nudge = (r: Row, delta: number) => {
     if (r.fixed) return;
     const key = r.id as keyof AnchorTimes;
-    s.update({ times: { ...s.times, [key]: s.times[key] + delta } });
+    s.update({ times: { ...s.times, [key]: clampDay(s.times[key] + delta) } });
+  };
+
+  const moveBlock = (id: string, delta: number) =>
+    s.update({
+      customBlocks: s.customBlocks.map((c) =>
+        c.id === id ? { ...c, min: clampDay(c.min + delta) } : c,
+      ),
+    });
+
+  const addBlock = () => {
+    const clean = newBlock.trim();
+    if (!clean) return;
+    const min = defaultBlockTime(s.times);
+    s.update({
+      customBlocks: [
+        ...s.customBlocks,
+        { id: `c${Date.now()}`, min, title: clean, sub: "you added this", icon: "bookmark-simple", kind: "school" },
+      ],
+    });
+    setNewBlock("");
+    s.cheer(`On the timeline at ${fmtTime(min)} — nudge it anytime.`);
   };
 
   return (
@@ -81,38 +106,56 @@ export default function EditDay() {
             </Card>
           ))}
 
+          {/* Your own blocks get the same nudge controls as the anchors —
+              a block you cannot move is a block you stop trusting. */}
+          {s.customBlocks.map((c) => (
+            <Card
+              key={c.id}
+              style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, paddingHorizontal: 13 }}
+            >
+              <Icon name={c.icon} size={18} color={t.neutral[400]} />
+              <View style={{ flex: 1 }}>
+                <T size={13.5} weight="medium" numberOfLines={1}>
+                  {c.title}
+                </T>
+                <T size={11} color={t.neutral[500]}>
+                  yours · remove with ×
+                </T>
+              </View>
+              <IconBtn
+                icon="caret-left"
+                label={`${c.title} earlier`}
+                onPress={() => moveBlock(c.id, -30)}
+              />
+              <T size={14} weight="medium" tabular style={{ width: 56, textAlign: "center" }}>
+                {fmtTime(c.min)}
+              </T>
+              <IconBtn
+                icon="caret-right"
+                label={`${c.title} later`}
+                onPress={() => moveBlock(c.id, 30)}
+              />
+              <Pressable
+                onPress={() => s.update({ customBlocks: s.customBlocks.filter((x) => x.id !== c.id) })}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${c.title}`}
+                hitSlop={6}
+                style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
+              >
+                <Icon name="x" size={13} color={t.neutral[600]} />
+              </Pressable>
+            </Card>
+          ))}
+
           <View style={{ flexDirection: "row", gap: 8, paddingVertical: 2 }}>
             <Field
               value={newBlock}
               onChangeText={setNewBlock}
               placeholder="Add a block: class, shift, appointment…"
+              onSubmitEditing={addBlock}
               style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 13 }}
             />
-            <IconBtn
-              icon="plus"
-              size={44}
-              accent
-              label="Add block"
-              onPress={() => {
-                const clean = newBlock.trim();
-                if (!clean) return;
-                s.update({
-                  customBlocks: [
-                    ...s.customBlocks,
-                    {
-                      id: `c${Date.now()}`,
-                      min: 960,
-                      title: clean,
-                      sub: "you added this",
-                      icon: "bookmark-simple",
-                      kind: "school",
-                    },
-                  ],
-                });
-                setNewBlock("");
-                s.cheer("On the timeline. 4:00p — nudge it anytime.");
-              }}
-            />
+            <IconBtn icon="plus" size={44} accent label="Add block" onPress={addBlock} />
           </View>
 
           <Pressable

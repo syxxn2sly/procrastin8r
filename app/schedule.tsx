@@ -36,12 +36,15 @@ export default function Schedule() {
   const t = useTheme();
   const s = useStore();
 
+  const now = new Date();
   const blocks = buildSchedule({
     times: s.times,
     energy: s.energy,
     workoutDone: s.workoutDone,
     customBlocks: s.customBlocks,
     hiddenBlocks: s.hiddenBlocks,
+    tasks: s.tasks,
+    nowMin: now.getHours() * 60 + now.getMinutes(),
   });
 
   const isGhost = (id: string, suggest?: boolean) => !!suggest && !s.accepted[id];
@@ -92,8 +95,8 @@ export default function Schedule() {
 
       <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
         <NoteBar icon="pill">
-          Meds peak ~10–1. Hard work sits there; easy stuff after. The gym slot came from your battery,
-          not a rulebook.
+          Meds peak {fmtTime(s.times.meds + 120)}–{fmtTime(s.times.meds + 300)}. Hard work sits there;
+          easy stuff after. The gym slot came from your battery, not a rulebook.
         </NoteBar>
       </View>
 
@@ -170,8 +173,10 @@ export default function Schedule() {
                     </T>
                   </View>
 
-                  {ghost || b.tag ? (
+                  {ghost || b.tag || b.suggest ? (
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={b.suggest ? `Un-add ${b.title}` : `Remove ${b.title}`}
                       onPress={() => {
                         if (ghost) return;
                         if (b.suggest) {
@@ -179,13 +184,13 @@ export default function Schedule() {
                           delete next[b.id];
                           s.update({ accepted: next });
                         } else if (b.removable) {
+                          // Your own blocks are deleted; generated care blocks
+                          // are only hidden, so they come back tomorrow.
                           if (b.id.startsWith("c")) {
                             s.update({ customBlocks: s.customBlocks.filter((c) => c.id !== b.id) });
                           } else {
                             s.update({ hiddenBlocks: { ...s.hiddenBlocks, [b.id]: true } });
                           }
-                        } else {
-                          s.cheer("Imported — that one lives in your calendar.");
                         }
                       }}
                       style={{
@@ -201,7 +206,7 @@ export default function Schedule() {
                         color={ghost ? t.neutral[400] : t.accentRamp[300]}
                         style={{ letterSpacing: 0.5 }}
                       >
-                        {ghost ? "suggestion" : b.removable ? `${b.tag} ×` : b.tag}
+                        {ghost ? "suggestion" : b.removable ? `${b.tag} ×` : "added ×"}
                       </T>
                     </Pressable>
                   ) : null}
