@@ -205,63 +205,68 @@ export default function Home() {
               <Card
                 key={task.id}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
+                  gap: 10,
                   opacity: task.done ? 0.55 : 1,
                   paddingVertical: 13,
                   paddingHorizontal: 14,
                 }}
               >
-                <CheckCircleBtn
-                  done={task.done}
-                  onPress={() => s.toggleTask(task.id)}
-                  label={task.title}
-                />
-                <View style={{ flex: 1 }}>
-                  <T
-                    size={14.5}
-                    weight="medium"
-                    color={task.done ? t.neutral[500] : t.text}
-                    style={task.done ? { textDecorationLine: "line-through" } : undefined}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <CheckCircleBtn
+                    done={task.done}
+                    onPress={() => s.toggleTask(task.id)}
+                    label={task.title}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <T
+                      size={14.5}
+                      weight="medium"
+                      color={task.done ? t.neutral[500] : t.text}
+                      style={task.done ? { textDecorationLine: "line-through" } : undefined}
+                    >
+                      {task.title}
+                    </T>
+                    <T size={11.5} color={t.neutral[500]}>
+                      {task.meta}
+                    </T>
+                  </View>
+                  <Pressable
+                    onPress={() => s.eraseTask(task.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Erase from list"
+                    hitSlop={6}
+                    style={{ width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
                   >
-                    {task.title}
-                  </T>
-                  <T size={11.5} color={t.neutral[500]}>
-                    {task.meta}
-                  </T>
+                    <Icon name="x" size={14} color={t.neutral[600]} />
+                  </Pressable>
                 </View>
+
+                {/* The actions get their own row. Inline, they squeezed the
+                    title into three broken lines on a 6.1" phone, and the task
+                    name is the one thing here that has to read at a glance. */}
                 {!task.done ? (
-                  <>
-                    <IconBtn
-                      icon="caret-up"
-                      size={30}
-                      label="Move up"
-                      onPress={() => s.bumpTask(task.id)}
-                    />
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <Btn
                       label="Start"
                       variant="primary"
                       size={12.5}
-                      style={{ paddingVertical: 7, paddingHorizontal: 13 }}
+                      style={{ flex: 1, paddingVertical: 8 }}
                       onPress={() => router.push({ pathname: "/focus", params: { id: task.id } })}
                     />
                     <IconBtn
+                      icon="caret-up"
+                      size={32}
+                      label="Move up"
+                      onPress={() => s.bumpTask(task.id)}
+                    />
+                    <IconBtn
                       icon="arrows-in-line-horizontal"
-                      size={30}
+                      size={32}
                       label="Shrink to the first step"
                       onPress={() => s.splitTask(task.id)}
                     />
-                  </>
+                  </View>
                 ) : null}
-                <Pressable
-                  onPress={() => s.eraseTask(task.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Erase from list"
-                  style={{ width: 30, height: 30, alignItems: "center", justifyContent: "center" }}
-                >
-                  <Icon name="x" size={14} color={t.neutral[600]} />
-                </Pressable>
               </Card>
             ))}
 
