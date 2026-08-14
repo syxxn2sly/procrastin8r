@@ -7,8 +7,9 @@ import {
   Btn, Card, CheckCircleBtn, Field, IconBtn, Kicker, NoteBar, Screen, T, useTheme,
 } from "@/components/ui";
 import { radius } from "@/constants/theme";
-import { noticingLine, useStore } from "@/lib/store";
-import type { Task } from "@/lib/types";
+import { anchorLabel, noticingLine, useStore } from "@/lib/store";
+import { builtInTemplates } from "@/lib/workouts";
+import type { Task, WeekDay } from "@/lib/types";
 
 const safeFoods = [
   { name: "chicken bowl", cal: 620, pro: 45 },
@@ -17,11 +18,7 @@ const safeFoods = [
   { name: "protein shake", cal: 200, pro: 30 },
 ];
 
-const workouts = {
-  low: ["20-min walk", "Low-battery pick — outside counts double"],
-  mid: ["Push day · 40 min", "Last push: 3 days ago · recovered"],
-  high: ["Push day + extras · 50 min", "Wired is for barbells"],
-};
+const weekdays: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 const dateLine = () => {
   const d = new Date();
@@ -65,7 +62,19 @@ export default function Home() {
   const queue = s.tasks.slice(visibleCount);
   const openTasks = s.tasks.filter((x) => !x.done).length;
   const doneCount = (energy === "low" ? s.tasks.slice(0, 1) : s.tasks).filter((x) => x.done).length;
-  const w = workouts[energy];
+  /**
+   * The movement card reads off the week plan rather than inventing a session
+   * and a recovery history the app has no way to know.
+   */
+  const planned = s.weekPlan[weekdays[(new Date().getDay() + 6) % 7]];
+  const tpl = planned
+    ? ({ ...builtInTemplates, ...Object.fromEntries(s.customTpls.map((c) => [c.id, c])) }[planned] ?? null)
+    : null;
+  const w: [string, string] = tpl
+    ? [tpl.name, tpl.sub]
+    : energy === "low"
+      ? ["20-min walk", "low-battery pick — outside counts double"]
+      : ["Move a bit", "nothing planned today · 10 minutes still counts"];
 
   const nextLabel =
     energy === "low"
@@ -201,6 +210,16 @@ export default function Home() {
           </View>
 
           <View style={{ gap: 8 }}>
+            {s.tasks.length === 0 ? (
+              <Card style={{ gap: 4, paddingVertical: 18, paddingHorizontal: 14 }}>
+                <T size={14} weight="medium">
+                  Nothing on the list.
+                </T>
+                <T size={12} color={t.neutral[500]} style={{ lineHeight: 17 }}>
+                  Add the first thing below, or hit Capture and dump whatever&apos;s rattling around.
+                </T>
+              </Card>
+            ) : null}
             {visible.map((task) => (
               <Card
                 key={task.id}
@@ -344,7 +363,7 @@ export default function Home() {
               >
                 <Icon name={a.icon} size={17} color={a.done ? t.accentRamp[300] : t.neutral[400]} />
                 <T size={11.5} weight="medium" style={{ lineHeight: 15 }}>
-                  {a.label}
+                  {anchorLabel(a.id, s.times)}
                 </T>
               </Pressable>
             ))}

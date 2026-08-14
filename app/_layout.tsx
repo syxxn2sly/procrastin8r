@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { View } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -19,7 +19,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function Shell() {
   const t = useTheme();
-  const { hydrated } = useStore();
+  const { hydrated, onboarded } = useStore();
+  const path = usePathname();
   const [fontsLoaded] = useFonts({
     JetBrainsMono_400Regular,
     JetBrainsMono_500Medium,
@@ -31,6 +32,12 @@ function Shell() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
+
+  // First launch goes to setup before anything else. Gating here rather than
+  // in the index route means it survives a deep link straight into /home.
+  useEffect(() => {
+    if (ready && !onboarded && path !== "/setup") router.replace("/setup");
+  }, [ready, onboarded, path]);
 
   if (!ready) return <View style={{ flex: 1, backgroundColor: t.bg }} />;
 

@@ -32,6 +32,8 @@ export type Nudge = {
 type State = {
   /** Which day the daily counters belong to, as YYYY-MM-DD in local time. */
   dayKey: string;
+  /** False until the anchor times have been set once, which gates first run. */
+  onboarded: boolean;
   mode: Mode | null;
   energy: Energy | null;
   tasks: Task[];
@@ -59,17 +61,19 @@ type State = {
   focusTotalMin: number;
 };
 
-const seedTasks: Task[] = [
-  { id: "t1", title: "Email the landlord back", meta: "5 min · due today", done: false },
-  { id: "t2", title: "Book the dentist", meta: "10 min · phone call", done: false },
-  { id: "t3", title: "Draft the report intro", meta: "25 min · big one", done: false },
+const seedAnchors: Anchor[] = [
+  { id: "wake", icon: "sun-horizon", done: false },
+  { id: "lunch", icon: "bowl-food", done: false },
+  { id: "wind", icon: "moon-stars", done: false },
 ];
 
-const seedAnchors: Anchor[] = [
-  { id: "a1", label: "Up by 9", icon: "sun-horizon", done: false },
-  { id: "a2", label: "Eat lunch", icon: "bowl-food", done: false },
-  { id: "a3", label: "Wind-down at 10", icon: "moon-stars", done: false },
-];
+/** Anchor names follow the anchor times rather than being frozen at install. */
+export const anchorLabel = (id: Anchor["id"], times: AnchorTimes) =>
+  id === "wake"
+    ? `Up by ${fmtTime(times.meds - 30)}`
+    : id === "lunch"
+      ? "Eat lunch"
+      : `Wind-down at ${fmtTime(times.wind)}`;
 
 const todayKey = () => {
   const d = new Date();
@@ -79,26 +83,27 @@ const todayKey = () => {
 
 const initial: State = {
   dayKey: todayKey(),
+  onboarded: false,
   mode: null,
   energy: null,
-  tasks: seedTasks,
+  tasks: [],
   anchors: seedAnchors,
-  inbox: ["renew library card"],
+  inbox: [],
   water: 0,
   food: null,
   meals: [],
   workoutDone: null,
   crisisAte: false,
   crisisAnchorDone: false,
-  schedDone: { meds: true },
+  schedDone: {},
   accepted: {},
   hiddenBlocks: {},
   customBlocks: [],
   times: MIN,
   autoGym: true,
-  weekPlan: { mon: "push", tue: null, wed: "legs", thu: null, fri: "push", sat: "walk", sun: null },
+  weekPlan: { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null },
   wTemplate: "push",
-  wSets: { bench: 3, ohp: 3, dips: 2, squat: 3, rdl: 3, lunge: 2, walk: 1 },
+  wSets: {},
   customTpls: [],
   exDetails: {},
   theme: "dark",
@@ -384,6 +389,31 @@ export const [StoreProvider, useStore] = createContextHook(() => {
   );
 
   /**
+   * Pull something out of the inbox and onto today's list. Without this the
+   * "later" pile is write-only, and a pile you cannot get things back out of
+   * is where you stop putting things — which kills the capture habit that the
+   * rest of the app depends on.
+   */
+  const promoteFromInbox = useCallback(
+    (index: number) => {
+      const title = state.inbox[index];
+      if (!title) return;
+      update((s) => ({ inbox: s.inbox.filter((_, i) => i !== index) }));
+      setPrevTasks(state.tasks);
+      update((s) => ({
+        tasks: [...s.tasks, { id: `t${Date.now()}`, title, meta: "pulled up from later", done: false }],
+      }));
+      cheer("Pulled up. It's in the line now.");
+    },
+    [state.inbox, state.tasks, update, cheer],
+  );
+
+  const removeFromInbox = useCallback(
+    (index: number) => update((s) => ({ inbox: s.inbox.filter((_, i) => i !== index) })),
+    [update],
+  );
+
+  /**
    * Triage is two questions on purpose. "Due soon" plus "what happens if you
    * skip it" is enough to sort today from later, and a third question is where
    * people quit and the inbox becomes a graveyard.
@@ -425,13 +455,16 @@ export const [StoreProvider, useStore] = createContextHook(() => {
       removeWater,
       logWorkout,
       toInbox,
+      promoteFromInbox,
+      removeFromInbox,
       fileCapture,
     }),
     [
       state, hydrated, toast, cheer, nudge, armNudge, dismissNudge, applyNudge,
       prevTasks, undoTasks, update, toggleTask, eraseTask, bumpTask, splitTask,
       addTask, completeTask, toggleAnchor, logFood, addMeal, removeMeal,
-      addWater, removeWater, logWorkout, toInbox, fileCapture,
+      addWater, removeWater, logWorkout, toInbox, promoteFromInbox,
+      removeFromInbox, fileCapture,
     ],
   );
 

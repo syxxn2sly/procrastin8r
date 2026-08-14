@@ -12,9 +12,9 @@ export const builtInTemplates: Record<string, WorkoutTemplate> = {
     icon: "barbell",
     sub: "3 lifts · ~40 min",
     ex: [
-      ["bench", "Bench press", "135 lb · last: 3×8"],
-      ["ohp", "Overhead press", "75 lb · last: 3×8"],
-      ["dips", "Dips", "bodyweight · last: 2×10"],
+      ["bench", "Bench press", "tap to add weight · reps"],
+      ["ohp", "Overhead press", "tap to add weight · reps"],
+      ["dips", "Dips", "bodyweight"],
     ],
   },
   legs: {
@@ -23,9 +23,9 @@ export const builtInTemplates: Record<string, WorkoutTemplate> = {
     icon: "person-simple-run",
     sub: "3 lifts · ~45 min",
     ex: [
-      ["squat", "Squat", "155 lb · last: 3×5"],
-      ["rdl", "Romanian deadlift", "135 lb · last: 3×8"],
-      ["lunge", "Walking lunges", "bodyweight · last: 2×12"],
+      ["squat", "Squat", "tap to add weight · reps"],
+      ["rdl", "Romanian deadlift", "tap to add weight · reps"],
+      ["lunge", "Walking lunges", "bodyweight"],
     ],
   },
   walk: {

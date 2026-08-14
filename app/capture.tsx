@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
@@ -63,9 +63,60 @@ export default function Capture() {
                 setStep("q1");
               }}
             />
-            <T size={11.5} color={t.neutral[600]}>
-              Inbox holds {s.inbox.length} unsorted thoughts. They&apos;re safe there.
-            </T>
+            {/* The "later" pile, visible and reachable. Filing something away
+                only feels safe if you can see it sitting there and pull it
+                back up the moment it starts to matter. */}
+            {s.inbox.length ? (
+              <View style={{ flex: 1, gap: 8, minHeight: 0 }}>
+                <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+                  <Kicker>later — bump one up when it starts to matter</Kicker>
+                  <T size={11} color={t.neutral[600]} tabular>
+                    {s.inbox.length}
+                  </T>
+                </View>
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 6 }}>
+                  {s.inbox.map((item, i) => (
+                    <Card
+                      key={`${item}-${i}`}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                      }}
+                    >
+                      <T size={13} color={t.neutral[300]} style={{ flex: 1 }} numberOfLines={2}>
+                        {item}
+                      </T>
+                      <IconBtn
+                        icon="caret-up"
+                        size={30}
+                        accent
+                        label={`Pull up ${item}`}
+                        onPress={() => s.promoteFromInbox(i)}
+                      />
+                      <Pressable
+                        onPress={() => s.removeFromInbox(i)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Drop ${item}`}
+                        hitSlop={6}
+                        style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
+                      >
+                        <Icon name="x" size={13} color={t.neutral[600]} />
+                      </Pressable>
+                    </Card>
+                  ))}
+                </ScrollView>
+                <T size={11.5} color={t.neutral[600]}>
+                  They&apos;re safe here. Nothing expires.
+                </T>
+              </View>
+            ) : (
+              <T size={11.5} color={t.neutral[600]}>
+                Nothing in the later pile yet. Anything you file lands here.
+              </T>
+            )}
           </>
         ) : null}
 
@@ -149,7 +200,7 @@ export default function Capture() {
             <T size={13} color={t.neutral[400]} style={{ lineHeight: 19 }}>
               {filedTo === "today"
                 ? "It's in the Next 3 line. You'll see it when it's its turn — not before."
-                : "Out of your head, off today's plate. It won't rot — the app will check in on it."}
+                : "Out of your head, off today's plate. It's in the later pile on this screen — pull it up whenever it starts to matter."}
             </T>
             <Btn
               label="Back to Today"

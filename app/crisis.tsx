@@ -3,7 +3,7 @@ import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
 import { Btn, Card, Kicker, Screen, T, useTheme } from "@/components/ui";
-import { useStore } from "@/lib/store";
+import { anchorLabel, useStore } from "@/lib/store";
 
 /**
  * Low-capacity mode. Three things, any one of which is a win, and no route to
@@ -63,7 +63,7 @@ export default function Crisis() {
           <Card style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 15 }}>
             <Icon name="anchor-simple" size={20} color={t.accent} />
             <T size={14.5} weight="medium" style={{ flex: 1 }}>
-              {anchor?.label ?? "Wind-down"}
+              {anchor ? anchorLabel(anchor.id, s.times) : "Wind-down"}
             </T>
             <Btn
               label={s.crisisAnchorDone ? "Done ✓" : "Done"}

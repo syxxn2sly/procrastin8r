@@ -14,9 +14,12 @@ export type Task = {
   done: boolean;
 };
 
+/**
+ * Anchors carry no stored label — it is derived from the times so that moving
+ * wind-down to 11 doesn't leave a card still reading "wind-down at 10".
+ */
 export type Anchor = {
-  id: string;
-  label: string;
+  id: "wake" | "lunch" | "wind";
   /** Phosphor icon name, resolved through components/icon.tsx. */
   icon: string;
   done: boolean;
