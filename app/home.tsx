@@ -11,12 +11,6 @@ import { anchorLabel, noticingLine, useStore } from "@/lib/store";
 import { builtInTemplates } from "@/lib/workouts";
 import type { Task, WeekDay } from "@/lib/types";
 
-const safeFoods = [
-  { name: "chicken bowl", cal: 620, pro: 45 },
-  { name: "pb toast", cal: 340, pro: 14 },
-  { name: "yogurt + granola", cal: 280, pro: 18 },
-  { name: "protein shake", cal: 200, pro: 30 },
-];
 
 const weekdays: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
@@ -389,31 +383,40 @@ export default function Home() {
               )}
             </View>
 
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-              {safeFoods.map((f) => (
-                <Pressable
-                  key={f.name}
-                  onPress={() => s.addMeal(f.name, f.cal, f.pro, `Logged. ${f.pro}g protein, zero decisions.`)}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: 10,
-                    borderRadius: radius.pill,
-                    borderWidth: 1,
-                    borderColor: pressed ? t.accent : t.neutral[800],
-                  })}
-                >
-                  <T size={11} color={t.neutral[300]}>
-                    {f.name}
-                  </T>
-                  <T size={11} color={t.neutral[600]} tabular>
-                    {f.cal} · {f.pro}g
-                  </T>
-                </Pressable>
-              ))}
-            </View>
+            {s.safeFoods.length ? (
+              <View style={{ gap: 5 }}>
+                <T size={10} color={t.neutral[600]} style={{ letterSpacing: 0.8 }}>
+                  go-tos — tap to log, hold to drop
+                </T>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                  {s.safeFoods.map((f) => (
+                    <Pressable
+                      key={f.id}
+                      onPress={() => s.addMeal(f.name, f.cal, f.pro, `Logged. ${f.pro}g protein, zero decisions.`)}
+                      onLongPress={() => s.removeSafeFood(f.id)}
+                      delayLongPress={450}
+                      style={({ pressed }) => ({
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: radius.pill,
+                        borderWidth: 1,
+                        borderColor: pressed ? t.accent : t.neutral[800],
+                      })}
+                    >
+                      <T size={11} color={t.neutral[300]}>
+                        {f.name}
+                      </T>
+                      <T size={11} color={t.neutral[600]} tabular>
+                        {f.cal} · {f.pro}g
+                      </T>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
 
             <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
               <Field
@@ -437,6 +440,21 @@ export default function Home() {
                 style={{ width: 58, fontSize: 12, paddingVertical: 8, paddingHorizontal: 8, backgroundColor: t.bg }}
               />
               <IconBtn icon="plus" size={32} label="Log meal" onPress={addMacros} />
+              {/* Saving a go-to from the row you just typed is the only moment
+                  you actually know the numbers, so the affordance lives here
+                  rather than behind a settings screen. */}
+              <IconBtn
+                icon="bookmark-simple"
+                size={32}
+                accent
+                label="Save as a go-to"
+                onPress={() => {
+                  s.addSafeFood(mealIn, Number(calIn) || 0, Number(proIn) || 0);
+                  setMealIn("");
+                  setCalIn("");
+                  setProIn("");
+                }}
+              />
             </View>
 
             {s.meals.length ? (

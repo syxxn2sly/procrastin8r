@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   Anchor,
+  SafeFood,
   AnchorTimes,
   CustomBlock,
   Energy,
@@ -47,6 +48,7 @@ type State = {
   water: number;
   food: FoodState;
   meals: Meal[];
+  safeFoods: SafeFood[];
   workoutDone: WorkoutState;
   crisisAte: boolean;
   crisisAnchorDone: boolean;
@@ -97,6 +99,13 @@ const initial: State = {
   water: 0,
   food: null,
   meals: [],
+  // Starters, not gospel — hold one to drop it, save your own from the meal row.
+  safeFoods: [
+    { id: "f1", name: "chicken bowl", cal: 620, pro: 45 },
+    { id: "f2", name: "pb toast", cal: 340, pro: 14 },
+    { id: "f3", name: "yogurt + granola", cal: 280, pro: 18 },
+    { id: "f4", name: "protein shake", cal: 200, pro: 30 },
+  ],
   workoutDone: null,
   crisisAte: false,
   crisisAnchorDone: false,
@@ -365,6 +374,28 @@ export const [StoreProvider, useStore] = createContextHook(() => {
     [update, cheer],
   );
 
+  const addSafeFood = useCallback(
+    (name: string, cal: number, pro: number) => {
+      const clean = name.trim();
+      if (!clean) return;
+      if (state.safeFoods.some((f) => f.name.toLowerCase() === clean.toLowerCase())) {
+        cheer("Already one of your go-tos.");
+        return;
+      }
+      update((s) => ({ safeFoods: [...s.safeFoods, { id: `f${Date.now()}`, name: clean, cal, pro }] }));
+      cheer("Saved as a go-to. One tap from now on.");
+    },
+    [state.safeFoods, update, cheer],
+  );
+
+  const removeSafeFood = useCallback(
+    (id: string) => {
+      update((s) => ({ safeFoods: s.safeFoods.filter((f) => f.id !== id) }));
+      cheer("Dropped from your go-tos.");
+    },
+    [update, cheer],
+  );
+
   const removeMeal = useCallback(
     (id: string) =>
       update((s) => {
@@ -467,6 +498,8 @@ export const [StoreProvider, useStore] = createContextHook(() => {
       logFood,
       addMeal,
       removeMeal,
+      addSafeFood,
+      removeSafeFood,
       addWater,
       removeWater,
       logWorkout,
@@ -479,6 +512,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
       state, hydrated, toast, cheer, nudge, armNudge, dismissNudge, applyNudge,
       prevTasks, undoTasks, update, toggleTask, eraseTask, bumpTask, splitTask,
       addTask, completeTask, toggleAnchor, logFood, addMeal, removeMeal,
+      addSafeFood, removeSafeFood,
       addWater, removeWater, logWorkout, toInbox, promoteFromInbox,
       removeFromInbox, fileCapture,
     ],

@@ -159,7 +159,7 @@ export default function EditDay() {
           </View>
 
           <Pressable
-            onPress={() => s.cheer("Would open your calendar picker — events land as blocks.")}
+            onPress={() => router.push("/import-calendar")}
             style={{
               flexDirection: "row",
               alignItems: "center",

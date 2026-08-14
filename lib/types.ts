@@ -25,6 +25,17 @@ export type Anchor = {
   done: boolean;
 };
 
+/**
+ * A one-tap food. The point is zero decisions on a bad day, which only works
+ * if the list is the user's own — so these are stored, not hardcoded.
+ */
+export type SafeFood = {
+  id: string;
+  name: string;
+  cal: number;
+  pro: number;
+};
+
 export type Meal = {
   id: string;
   name: string;

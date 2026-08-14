@@ -14,7 +14,9 @@
       "bundleIdentifier": "app.procrastin8r",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCalendarsUsageDescription": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks. Events are copied onto your device only and nothing is written back to your calendar.",
+        "NSCalendarsFullAccessUsageDescription": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks. Events are copied onto your device only and nothing is written back to your calendar."
       }
     },
     "android": {
@@ -31,6 +33,12 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks."
+        }
+      ],
       [
         "expo-splash-screen",
         {
