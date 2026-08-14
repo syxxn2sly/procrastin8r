@@ -66,15 +66,18 @@ export default function Capture() {
             {/* The "later" pile, visible and reachable. Filing something away
                 only feels safe if you can see it sitting there and pull it
                 back up the moment it starts to matter. */}
+            {/* Shrink rather than flex, so the pile hugs its contents and the
+                reassurance line sits under the list instead of stranded at the
+                bottom of an empty screen. */}
             {s.inbox.length ? (
-              <View style={{ flex: 1, gap: 8, minHeight: 0 }}>
-                <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
-                  <Kicker>later — bump one up when it starts to matter</Kicker>
+              <View style={{ flexShrink: 1, gap: 8, minHeight: 0 }}>
+                <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+                  <Kicker style={{ flex: 1 }}>later — bump one up when it starts to matter</Kicker>
                   <T size={11} color={t.neutral[600]} tabular>
                     {s.inbox.length}
                   </T>
                 </View>
-                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 6 }}>
+                <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 6 }}>
                   {s.inbox.map((item, i) => (
                     <Card
                       key={`${item}-${i}`}
