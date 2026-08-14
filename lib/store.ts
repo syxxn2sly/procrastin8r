@@ -17,7 +17,12 @@ import type {
 } from "@/lib/types";
 import type { ThemeName } from "@/constants/theme";
 
-const STORAGE_KEY = "procrastin8r.state.v1";
+/**
+ * Bumped when the persisted shape changes incompatibly. v1 held the design's
+ * demo seed and anchors keyed a1/a2/a3; nothing had shipped, so dropping those
+ * blobs is cheaper and safer than migrating them.
+ */
+const STORAGE_KEY = "procrastin8r.state.v2";
 
 /** Minutes past midnight — the unit every schedule time is stored in. */
 const MIN = { meds: 510, lunch: 780, gym: 1050, wind: 1320 };
@@ -176,7 +181,18 @@ export const [StoreProvider, useStore] = createContextHook(() => {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = { ...initial, ...(JSON.parse(raw) as Partial<State>) };
-          setState(saved.dayKey === todayKey() ? saved : rollDay(saved));
+          // A blob written by an older build can carry anchors whose ids no
+          // longer exist. Labels are derived from the id, so a stale one falls
+          // through every branch and every anchor renders as the last case.
+          // Shape-check on the way in rather than trusting what is on disk.
+          const validAnchors =
+            Array.isArray(saved.anchors) &&
+            saved.anchors.length === seedAnchors.length &&
+            saved.anchors.every((a) => seedAnchors.some((s) => s.id === a?.id));
+          const merged = validAnchors
+            ? saved
+            : { ...saved, anchors: seedAnchors.map((a) => ({ ...a })) };
+          setState(merged.dayKey === todayKey() ? merged : rollDay(merged));
         }
       } catch {
         // A corrupt or unreadable blob is not worth blocking the app over —
