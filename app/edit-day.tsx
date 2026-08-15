@@ -118,8 +118,8 @@ export default function EditDay() {
                 <T size={13.5} weight="medium" numberOfLines={1}>
                   {c.title}
                 </T>
-                <T size={11} color={t.neutral[500]}>
-                  yours · remove with ×
+                <T size={11} color={t.neutral[500]} numberOfLines={1}>
+                  {c.sub} · remove with ×
                 </T>
               </View>
               <IconBtn

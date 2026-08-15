@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Icon } from "@/components/icon";
 import { Btn, Card, CheckCircleBtn, IconBtn, NoteBar, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
-import { buildSchedule } from "@/lib/schedule";
+import { buildSchedule, currentBlockId } from "@/lib/schedule";
 import { fmtTime, useStore } from "@/lib/store";
 
 function Stat({ label, value, pct }: { label: string; value: string; pct: `${number}%` }) {
@@ -44,11 +44,14 @@ export default function Schedule() {
     customBlocks: s.customBlocks,
     hiddenBlocks: s.hiddenBlocks,
     tasks: s.tasks,
-    nowMin: now.getHours() * 60 + now.getMinutes(),
   });
 
   const isGhost = (id: string, suggest?: boolean) => !!suggest && !s.accepted[id];
   const isDone = (id: string) => (id === "gym" ? s.workoutDone !== null : !!s.schedDone[id]);
+
+  const nowId = currentBlockId(blocks, now.getHours() * 60 + now.getMinutes(), (b) =>
+    isGhost(b.id, b.suggest),
+  );
 
   const real = blocks.filter((b) => !isGhost(b.id, b.suggest));
   const heldCount = real.filter((b) => isDone(b.id)).length;
@@ -63,7 +66,7 @@ export default function Schedule() {
             Schedule
           </T>
           <T size={11} color={t.neutral[500]}>
-            {heldCount} of {real.length} blocks held · dashed = suggestions, your call
+            {heldCount} of {real.length} held · dashed = suggestions
           </T>
         </View>
         <Btn
@@ -104,11 +107,11 @@ export default function Schedule() {
         {blocks.map((b) => {
           const ghost = isGhost(b.id, b.suggest);
           const done = !ghost && isDone(b.id);
-          const showNow = !!b.isNow && !done && !ghost;
+          const showNow = b.id === nowId && !done && !ghost;
 
           return (
-            <View key={b.id} style={{ flexDirection: "row", gap: 12, opacity: ghost ? 0.65 : done ? 0.6 : 1 }}>
-              <View style={{ width: 44, alignItems: "flex-end", paddingTop: 11 }}>
+            <View key={b.id} style={{ flexDirection: "row", gap: 8, opacity: ghost ? 0.65 : done ? 0.6 : 1 }}>
+              <View style={{ width: 38, alignItems: "flex-end", paddingTop: 11 }}>
                 <T size={11} tabular color={showNow ? t.accentRamp[300] : t.neutral[500]}>
                   {fmtTime(b.min)}
                 </T>
@@ -120,7 +123,7 @@ export default function Schedule() {
                   marginVertical: 6,
                   backgroundColor: ghost
                     ? "transparent"
-                    : b.isNow
+                    : showNow
                       ? t.accent
                       : done
                         ? t.accentRamp[800]
@@ -132,18 +135,18 @@ export default function Schedule() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 10,
+                    gap: 9,
                     paddingVertical: 11,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: 11,
                     borderRadius: radius.md,
                     borderWidth: 1,
                     borderStyle: ghost ? "dashed" : "solid",
                     borderColor: ghost
                       ? t.neutral[700]
-                      : b.isNow && !done
+                      : showNow
                         ? t.accentRamp[700]
                         : t.neutral[800],
-                    backgroundColor: ghost ? "transparent" : b.isNow && !done ? t.accentRamp[900] : t.surface,
+                    backgroundColor: ghost ? "transparent" : showNow ? t.accentRamp[900] : t.surface,
                   }}
                 >
                   <Icon
@@ -169,7 +172,7 @@ export default function Schedule() {
                       {b.title}
                     </T>
                     <T size={11} color={t.neutral[500]}>
-                      {ghost ? `${b.sub} · tap + to add — or ignore it` : b.sub}
+                      {ghost ? `${b.sub} · tap + to add` : b.sub}
                     </T>
                   </View>
 

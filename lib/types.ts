@@ -82,7 +82,6 @@ export type ScheduleBlock = {
   kind: BlockKind;
   /** Suggestions render dashed and do nothing until accepted. */
   suggest?: boolean;
-  isNow?: boolean;
   tag?: string;
   removable?: boolean;
   done?: boolean;

@@ -36,10 +36,8 @@ export function buildSchedule(opts: {
   customBlocks: CustomBlock[];
   hiddenBlocks: Record<string, boolean>;
   tasks: Task[];
-  /** Minutes past midnight, for marking the block you are currently inside. */
-  nowMin: number;
 }): ScheduleBlock[] {
-  const { times, energy, workoutDone, customBlocks, hiddenBlocks, tasks, nowMin } = opts;
+  const { times, energy, workoutDone, customBlocks, hiddenBlocks, tasks } = opts;
 
   const open = tasks.filter((t) => !t.done);
   const big = pickBig(open);
@@ -132,18 +130,30 @@ export function buildSchedule(opts: {
     ...customBlocks.map((c) => ({ ...c, tag: "yours", removable: true })),
   ];
 
-  const visible = blocks.filter((b) => !hiddenBlocks[b.id]).sort((a, b) => a.min - b.min);
+  return blocks.filter((b) => !hiddenBlocks[b.id]).sort((a, b) => a.min - b.min);
+}
 
-  // "Now" is the last block you have already reached — the one you are inside,
-  // not the next one coming up. Before the first block of the day, nothing is
-  // marked rather than falsely pointing at breakfast.
-  let nowId: string | null = null;
-  for (const b of visible) {
-    if (b.min <= nowMin) nowId = b.id;
+/**
+ * "Now" is the last block you have already reached — the one you are inside,
+ * not the next one coming up. Before the first block of the day nothing is
+ * marked, rather than falsely pointing at breakfast.
+ *
+ * Suggestions are skipped: they are not on your day until you accept them, and
+ * letting an unaccepted one claim "now" makes the marker vanish from the
+ * timeline entirely for the hours it happens to cover.
+ */
+export function currentBlockId(
+  blocks: ScheduleBlock[],
+  nowMin: number,
+  isGhost: (b: ScheduleBlock) => boolean,
+): string | null {
+  let id: string | null = null;
+  for (const b of blocks) {
+    if (isGhost(b)) continue;
+    if (b.min <= nowMin) id = b.id;
     else break;
   }
-
-  return visible.map((b) => (b.id === nowId ? { ...b, isNow: true } : b));
+  return id;
 }
 
 /** Where a newly added block lands: mid-afternoon, then nudge it from Edit day. */
