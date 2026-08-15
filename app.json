@@ -16,7 +16,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCalendarsUsageDescription": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks. Events are copied onto your device only and nothing is written back to your calendar.",
-        "NSCalendarsFullAccessUsageDescription": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks. Events are copied onto your device only and nothing is written back to your calendar."
+        "NSCalendarsFullAccessUsageDescription": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks. Events are copied onto your device only and nothing is written back to your calendar.",
+        "NSRemindersUsageDescription": "Procrastin8r reads calendar events only and never requests access to Reminders. iOS requires this entry because the calendar library checks for it when the app starts.",
+        "NSRemindersFullAccessUsageDescription": "Procrastin8r reads calendar events only and never requests access to Reminders. iOS requires this entry because the calendar library checks for it when the app starts."
       }
     },
     "android": {
@@ -36,7 +38,8 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks."
+          "calendarPermission": "Procrastin8r reads your calendar so classes, shifts and appointments can appear on your day as blocks.",
+          "remindersPermission": "Procrastin8r reads calendar events only and never requests access to Reminders. iOS requires this entry because the calendar library checks for it when the app starts."
         }
       ],
       [
