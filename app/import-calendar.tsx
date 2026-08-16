@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Platform, Pressable, ScrollView, View } from "react-native";
-import { router } from "expo-router";
+import { AppState, Platform, Pressable, ScrollView, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
 import * as Calendar from "expo-calendar";
 
 import { Icon } from "@/components/icon";
@@ -13,8 +13,6 @@ type Found = {
   title: string;
   min: number;
   calendarTitle: string;
-  /** Already on the day, so it is shown checked and importing it again is a no-op. */
-  existing: boolean;
 };
 
 const minutesOf = (d: Date) => d.getHours() * 60 + d.getMinutes();
@@ -76,29 +74,50 @@ export default function ImportCalendar() {
             title,
             min,
             calendarTitle: byCalendar.get(e.calendarId) ?? "calendar",
-            existing: s.customBlocks.some((b) => b.title === title && b.min === min),
           };
         })
         .sort((a, b) => a.min - b.min);
 
       setEvents(found);
-      setPicked(Object.fromEntries(found.filter((f) => !f.existing).map((f) => [f.key, true])));
+      setPicked(Object.fromEntries(found.map((f) => [f.key, true])));
+      setError(null);
       setStatus("ready");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not read the calendar.");
       setStatus("ready");
     }
-  }, [s.customBlocks]);
+    // Deliberately depends on nothing: whether an event is already on the day
+    // is derived at render, which keeps this callback stable enough to hang
+    // the focus and foreground listeners off without a reload loop.
+  }, []);
+
+  /**
+   * Focus covers the first mount too, so there is no separate initial load.
+   *
+   * The calendar can change while the screen is sitting there — the usual case
+   * being that you left to add the very event you came here to import. Re-read
+   * whenever the screen is focused again or the app returns from the
+   * background, so what is on screen is never a stale answer.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "web") load();
+    }, [load]),
+  );
 
   useEffect(() => {
-    if (status === "asking") load();
-    // load() is only meant to run for the initial permission request; re-running
-    // it on every customBlocks change would stomp the user's current selection.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+    if (Platform.OS === "web") return;
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "active") load();
+    });
+    return () => sub.remove();
+  }, [load]);
+
+  const isExisting = (e: Found) =>
+    s.customBlocks.some((b) => b.title === e.title && b.min === e.min);
 
   const importPicked = () => {
-    const chosen = events.filter((e) => picked[e.key] && !e.existing);
+    const chosen = events.filter((e) => picked[e.key] && !isExisting(e));
     if (!chosen.length) {
       router.back();
       return;
@@ -116,7 +135,7 @@ export default function ImportCalendar() {
     router.back();
   };
 
-  const pickedCount = events.filter((e) => picked[e.key] && !e.existing).length;
+  const pickedCount = events.filter((e) => picked[e.key] && !isExisting(e)).length;
 
   return (
     <Screen>
@@ -178,7 +197,7 @@ export default function ImportCalendar() {
                       gap: 12,
                       paddingVertical: 12,
                       paddingHorizontal: 13,
-                      opacity: e.existing ? 0.55 : 1,
+                      opacity: isExisting(e) ? 0.55 : 1,
                     }}
                   >
                     <T size={11} tabular color={t.neutral[500]} style={{ width: 44 }}>
@@ -189,15 +208,15 @@ export default function ImportCalendar() {
                         {e.title}
                       </T>
                       <T size={11} color={t.neutral[500]}>
-                        {e.existing ? "already on your day" : e.calendarTitle}
+                        {isExisting(e) ? "already on your day" : e.calendarTitle}
                       </T>
                     </View>
                     <CheckCircleBtn
                       size={24}
-                      done={e.existing || !!picked[e.key]}
+                      done={isExisting(e) || !!picked[e.key]}
                       label={e.title}
                       onPress={() => {
-                        if (e.existing) return;
+                        if (isExisting(e)) return;
                         setPicked((p) => ({ ...p, [e.key]: !p[e.key] }));
                       }}
                     />
