@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
 import { usePathname } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Btn, T, useTheme } from "@/components/ui";
@@ -55,6 +56,7 @@ export function Nudge() {
   const { nudge, armNudge, dismissNudge, applyNudge } = useStore();
   const t = useTheme();
   const path = usePathname();
+  const insets = useSafeAreaInsets();
   const eligible = path === "/home" || path === "/blunt";
 
   useEffect(() => {
@@ -71,7 +73,10 @@ export function Nudge() {
         position: "absolute",
         left: 14,
         right: 14,
-        top: 8,
+        // The overlay sits outside the screen's SafeAreaView, so it has to
+        // clear the status bar and Dynamic Island itself — at a flat offset it
+        // rendered straight over the clock.
+        top: insets.top + 8,
         gap: 8,
         padding: 14,
         backgroundColor: t.surface,
