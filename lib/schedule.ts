@@ -1,10 +1,11 @@
+import { copy } from "@/lib/copy";
 import { fmtTime } from "@/lib/store";
 import type {
   AnchorTimes, CustomBlock, Energy, ScheduleBlock, Task, WorkoutState,
 } from "@/lib/types";
 
 const workoutName = (energy: Energy | null) =>
-  energy === "low" ? "20-min walk" : energy === "high" ? "Push day + extras · 50 min" : "Push day · 40 min";
+  energy === "low" ? copy.schedule.workoutName.low : energy === "high" ? copy.schedule.workoutName.high : copy.schedule.workoutName.mid;
 
 /** The one that reads as the hard task: flagged "big", else the longest title. */
 function pickBig(open: Task[]): Task | null {
@@ -50,8 +51,8 @@ export function buildSchedule(opts: {
     {
       id: "meds",
       min: times.meds,
-      title: "Breakfast + meds",
-      sub: "anchor · food before the pill",
+      title: copy.schedule.blocks.meds.title,
+      sub: copy.schedule.blocks.meds.sub,
       icon: "pill",
       kind: "anchor",
     },
@@ -60,8 +61,8 @@ export function buildSchedule(opts: {
           {
             id: "deep",
             min: peakStart,
-            title: `Deep work · ${lower(big.title)}`,
-            sub: `meds peak ${fmtTime(peakStart)}–${fmtTime(peakEnd)} — the hard task fits here`,
+            title: copy.schedule.blocks.deep.title(lower(big.title)),
+            sub: copy.schedule.blocks.deep.sub(fmtTime(peakStart), fmtTime(peakEnd)),
             icon: "brain",
             kind: "work" as const,
             suggest: true,
@@ -71,11 +72,11 @@ export function buildSchedule(opts: {
     {
       id: "break",
       min: times.meds + 180,
-      title: "Water + move for 5",
-      sub: "break, not a reward",
+      title: copy.schedule.blocks.break.title,
+      sub: copy.schedule.blocks.break.sub,
       icon: "drop",
       kind: "care",
-      tag: "hide",
+      tag: copy.schedule.blocks.break.tag,
       removable: true,
     },
     ...(quick.length
@@ -83,8 +84,8 @@ export function buildSchedule(opts: {
           {
             id: "light",
             min: times.lunch - 60,
-            title: `Small stuff · ${quick.map((t) => lower(t.title)).join(", ")}`,
-            sub: `${quick.length === 1 ? "a quick win" : "two quick wins"} before lunch`,
+            title: copy.schedule.blocks.light.title(quick.map((t) => lower(t.title)).join(", ")),
+            sub: copy.schedule.blocks.light.sub(quick.length),
             icon: "list-checks",
             kind: "work" as const,
             suggest: true,
@@ -94,8 +95,8 @@ export function buildSchedule(opts: {
     {
       id: "lunch",
       min: times.lunch,
-      title: "Lunch",
-      sub: "anchor · safe-food list is loaded",
+      title: copy.schedule.blocks.lunch.title,
+      sub: copy.schedule.blocks.lunch.sub,
       icon: "bowl-food",
       kind: "anchor",
     },
@@ -103,7 +104,7 @@ export function buildSchedule(opts: {
       id: "gym",
       min: times.gym,
       title: workoutName(energy),
-      sub: "fits today's battery · 10-min version still counts",
+      sub: copy.schedule.blocks.gym.sub,
       icon: "barbell",
       kind: "work",
       suggest: true,
@@ -112,8 +113,8 @@ export function buildSchedule(opts: {
     {
       id: "dinner",
       min: times.wind - 180,
-      title: "Dinner",
-      sub: "food · one-tap log",
+      title: copy.schedule.blocks.dinner.title,
+      sub: copy.schedule.blocks.dinner.sub,
       icon: "fork-knife",
       kind: "care",
       tag: "hide",
@@ -122,8 +123,8 @@ export function buildSchedule(opts: {
     {
       id: "wind",
       min: times.wind,
-      title: "Wind-down",
-      sub: "anchor · screens dim, tomorrow's Next 3 gets set",
+      title: copy.schedule.blocks.wind.title,
+      sub: copy.schedule.blocks.wind.sub,
       icon: "moon-stars",
       kind: "anchor",
     },

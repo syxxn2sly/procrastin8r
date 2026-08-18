@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { Icon } from "@/components/icon";
 import { Btn, Card, Field, IconBtn, Kicker, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 import { MAX_TEMPLATES, builtInTemplates, customIcons } from "@/lib/workouts";
 import type { WeekDay } from "@/lib/types";
@@ -57,7 +58,7 @@ export default function Workout() {
     setNewOpen(false);
     setNewName("");
     setNewEx("");
-    s.cheer("Template saved. Tap any day below to slot it in.");
+    s.cheer(copy.toast.templateSaved);
   };
 
   return (
@@ -68,14 +69,14 @@ export default function Workout() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <IconBtn icon="arrow-left" size={32} label="Back" onPress={() => router.back()} />
+          <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
           <T size={16} weight="medium">
-            Log workout
+            {copy.workout.title}
           </T>
         </View>
 
         <View>
-          <Kicker style={{ marginBottom: 8 }}>One tap — saved templates</Kicker>
+          <Kicker style={{ marginBottom: 8 }}>{copy.workout.templatesLabel}</Kicker>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {Object.entries(templates).map(([id, tpl]) => {
               const on = id === s.wTemplate;
@@ -108,7 +109,7 @@ export default function Workout() {
             {canAdd ? (
               <Pressable
                 onPress={() => setNewOpen((v) => !v)}
-                accessibilityLabel="New template"
+                accessibilityLabel={copy.a11y.newTemplate}
                 style={{
                   width: 44,
                   alignItems: "center",
@@ -126,15 +127,15 @@ export default function Workout() {
 
           {newOpen ? (
             <Card style={{ gap: 6, marginTop: 8 }}>
-              <Field value={newName} onChangeText={setNewName} placeholder="name it — e.g. Pull day" style={{ backgroundColor: t.bg, fontSize: 12 }} />
+              <Field value={newName} onChangeText={setNewName} placeholder={copy.workout.newNamePlaceholder} style={{ backgroundColor: t.bg, fontSize: 12 }} />
               <Field
                 value={newEx}
                 onChangeText={setNewEx}
-                placeholder="exercises, comma-separated — rows, curls, face pulls"
+                placeholder={copy.workout.newExPlaceholder}
                 style={{ backgroundColor: t.bg, fontSize: 12 }}
               />
               <Btn
-                label="Save — it joins the day cycle below"
+                label={copy.workout.saveTemplate}
                 variant="primary"
                 size={12}
                 style={{ paddingVertical: 9 }}
@@ -145,7 +146,7 @@ export default function Workout() {
         </View>
 
         <View>
-          <Kicker style={{ marginBottom: 8 }}>this week — tap a day to choose a plan</Kicker>
+          <Kicker style={{ marginBottom: 8 }}>{copy.workout.weekLabel}</Kicker>
           <View style={{ flexDirection: "row", gap: 6 }}>
             {week.map((d) => {
               const planned = s.weekPlan[d];
@@ -183,19 +184,19 @@ export default function Workout() {
                     color={tpl ? t.accentRamp[300] : t.neutral[600]}
                   />
                   <T size={8.5} color={t.neutral[500]}>
-                    {tpl ? tpl.name.split(" ")[0] : "rest"}
+                    {tpl ? tpl.name.split(" ")[0] : copy.workout.rest}
                   </T>
                 </Pressable>
               );
             })}
           </View>
           <T size={10.5} color={t.neutral[600]} style={{ marginTop: 6 }}>
-            {Object.values(s.weekPlan).filter(Boolean).length} sessions planned · rest is a plan, not a gap
+            {copy.workout.weekSummary(Object.values(s.weekPlan).filter(Boolean).length)}
           </T>
         </View>
 
         <View>
-          <Kicker style={{ marginBottom: 8 }}>{current.name} — tap to adjust, nothing required</Kicker>
+          <Kicker style={{ marginBottom: 8 }}>{copy.workout.setsLabel(current.name)}</Kicker>
           <View style={{ gap: 8 }}>
             {current.ex.map(([id, name, detail]) => {
               const sets = s.wSets[id] ?? 3;
@@ -213,13 +214,13 @@ export default function Workout() {
                         value={editVal}
                         onChangeText={setEditVal}
                         autoFocus
-                        placeholder="75 lb · last: 3×8"
+                        placeholder={copy.workout.detailPlaceholder}
                         onBlur={() => {
                           const v = editVal.trim();
                           setEditing(null);
                           if (v) {
                             s.update({ exDetails: { ...s.exDetails, [id]: v } });
-                            s.cheer("Numbers saved. Next time it's pre-filled.");
+                            s.cheer(copy.toast.numbersSaved);
                           }
                         }}
                         style={{
@@ -248,16 +249,16 @@ export default function Workout() {
                   </View>
                   <IconBtn
                     icon="minus"
-                    label={`One less set of ${name}`}
+                    label={copy.a11y.lessSets(name)}
                     onPress={() => s.update({ wSets: { ...s.wSets, [id]: Math.max(0, sets - 1) } })}
                   />
                   <T size={14} weight="medium" tabular style={{ width: 52, textAlign: "center" }}>
-                    {sets} sets
+                    {copy.workout.sets(sets)}
                   </T>
                   <IconBtn
                     icon="plus"
                     accent
-                    label={`One more set of ${name}`}
+                    label={copy.a11y.moreSets(name)}
                     onPress={() => s.update({ wSets: { ...s.wSets, [id]: sets + 1 } })}
                   />
                 </Card>
@@ -270,33 +271,33 @@ export default function Workout() {
           <Field
             value={voice}
             onChangeText={setVoice}
-            placeholder={'Or just say it: "bench, 135 for 8"'}
+            placeholder={copy.workout.voicePlaceholder}
             style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 13 }}
             onSubmitEditing={() => {
               if (!voice.trim()) return;
               setVoice("");
-              s.cheer("Logged. No typing needed.");
+              s.cheer(copy.toast.voiceLogged);
             }}
           />
           <IconBtn
             icon="microphone"
             size={44}
-            label="Log by voice"
+            label={copy.a11y.logByVoice}
             onPress={() => {
               if (!voice.trim()) return;
               setVoice("");
-              s.cheer("Logged. No typing needed.");
+              s.cheer(copy.toast.voiceLogged);
             }}
           />
         </View>
 
         <Btn
-          label="Save — details optional, showing up is the win"
+          label={copy.workout.save}
           variant="primary"
           size={14}
           style={{ paddingVertical: 13 }}
           onPress={() => {
-            s.logWorkout("full", "Workout logged — details and all.");
+            s.logWorkout("full", copy.toast.workoutDetailed);
             router.back();
           }}
         />

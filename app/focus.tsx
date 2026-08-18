@@ -5,6 +5,7 @@ import Svg, { Circle } from "react-native-svg";
 
 import { Btn, Field, IconBtn, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 
 const SIZE = 200;
@@ -62,7 +63,7 @@ export default function Focus() {
     setTotal(next * 60);
     setLeft((v) => v + (next * 60 - total));
     s.update({ focusTotalMin: next });
-    s.cheer("Five more. Still counts.");
+    s.cheer(copy.toast.focusExtended);
   };
 
   const mm = String(Math.floor(left / 60)).padStart(2, "0");
@@ -73,15 +74,15 @@ export default function Focus() {
     <Screen>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <IconBtn icon="arrow-left" size={32} label="Back" onPress={() => router.back()} />
+          <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
           <T size={16} weight="medium">
-            Focus
+            {copy.focus.title}
           </T>
         </View>
 
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 18 }}>
           <T size={14} color={t.neutral[400]} style={{ textAlign: "center", maxWidth: 260 }}>
-            {task?.title ?? "Focus"}
+            {task?.title ?? copy.focus.title}
           </T>
 
           <View style={{ width: SIZE, height: SIZE, alignItems: "center", justifyContent: "center" }}>
@@ -111,20 +112,20 @@ export default function Focus() {
               {mm}:{ss}
             </T>
             <T size={11} color={t.neutral[500]} style={{ letterSpacing: 1.1 }}>
-              {running ? "you can see it moving" : "paused — fine"}
+              {running ? copy.focus.running : copy.focus.paused}
             </T>
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Btn
-              label={running ? "Pause" : "Resume"}
+              label={running ? copy.focus.pause : copy.focus.resume}
               variant="primary"
               size={14}
               style={{ paddingVertical: 11, paddingHorizontal: 26, borderRadius: 999 }}
               onPress={() => setRunning((v) => !v)}
             />
             <Btn
-              label="+5"
+              label={copy.focus.extend}
               size={14}
               style={{ paddingVertical: 11, paddingHorizontal: 18, borderRadius: 999 }}
               onPress={extend}
@@ -133,7 +134,7 @@ export default function Focus() {
 
           <View style={{ alignItems: "center", gap: 6 }}>
             <T size={10} color={t.neutral[600]} style={{ letterSpacing: 0.8 }}>
-              how long — sticks for next time
+              {copy.focus.lengthLabel}
             </T>
             <View style={{ flexDirection: "row", gap: 6 }}>
               {PRESETS.map((min) => {
@@ -143,7 +144,7 @@ export default function Focus() {
                     key={min}
                     onPress={() => setMinutes(min)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${min} minutes`}
+                    accessibilityLabel={copy.a11y.minutes(min)}
                     accessibilityState={{ selected: on }}
                     style={({ pressed }) => ({
                       paddingVertical: 7,
@@ -169,7 +170,7 @@ export default function Focus() {
           <Field
             value={interrupt}
             onChangeText={setInterrupt}
-            placeholder="Stray thought? Dump it, stay on task"
+            placeholder={copy.focus.interruptPlaceholder}
             style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 13 }}
             onSubmitEditing={() => {
               s.toInbox(interrupt);
@@ -179,7 +180,7 @@ export default function Focus() {
           <IconBtn
             icon="tray-arrow-down"
             size={44}
-            label="Dump to inbox"
+            label={copy.a11y.dumpToInbox}
             onPress={() => {
               s.toInbox(interrupt);
               setInterrupt("");
@@ -189,7 +190,7 @@ export default function Focus() {
 
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Btn
-            label="Done"
+            label={copy.focus.done}
             variant="primary"
             size={14}
             style={{ flex: 1, paddingVertical: 12 }}
@@ -203,12 +204,12 @@ export default function Focus() {
               and the styling both have to say so, or nobody will ever tap it
               and they will just close the app instead. */}
           <Btn
-            label="Bail — counts"
+            label={copy.focus.bail}
             variant="quiet"
             size={14}
             style={{ flex: 1, paddingVertical: 12 }}
             onPress={() => {
-              s.cheer("You started. That already counts.");
+              s.cheer(copy.toast.focusBailed);
               router.back();
             }}
           />

@@ -4,6 +4,7 @@ import { router, type Href } from "expo-router";
 import { Icon } from "@/components/icon";
 import { Kicker, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 import type { Energy, Mode } from "@/lib/types";
 
@@ -20,16 +21,16 @@ const options: {
     mode: "regular",
     energy: "mid",
     icon: "squares-four",
-    title: "Regular",
-    sub: "The full setup — next 3, food, schedule, movement.",
+    title: copy.checkIn.regular.title,
+    sub: copy.checkIn.regular.sub,
     route: "/home",
   },
   {
     mode: "blunt",
     energy: "mid",
     icon: "terminal",
-    title: "The blunt list",
-    sub: "No cards, no charts. Just do the things, in order.",
+    title: copy.checkIn.blunt.title,
+    sub: copy.checkIn.blunt.sub,
     route: "/blunt",
     accentIcon: true,
   },
@@ -37,8 +38,8 @@ const options: {
     mode: "cant",
     energy: "low",
     icon: "cloud",
-    title: "I can't today",
-    sub: "Three things. Everything else goes away. No guilt.",
+    title: copy.checkIn.cant.title,
+    sub: copy.checkIn.cant.sub,
     route: "/crisis",
   },
 ];
@@ -60,12 +61,12 @@ export default function CheckIn() {
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 28, gap: 10 }}>
-        <Kicker>Daily check-in · 10 seconds</Kicker>
+        <Kicker>{copy.checkIn.kicker}</Kicker>
         <T size={28} weight="medium" style={{ letterSpacing: -0.4, marginBottom: 4 }}>
-          How do you want today served?
+          {copy.checkIn.title}
         </T>
         <T size={13} color={t.neutral[400]} style={{ marginBottom: 18 }}>
-          Pick the mode. Change it anytime.
+          {copy.checkIn.sub}
         </T>
 
         <View style={{ gap: 10 }}>

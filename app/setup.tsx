@@ -3,16 +3,17 @@ import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
 import { Btn, Card, IconBtn, Kicker, Screen, T, useTheme } from "@/components/ui";
+import { copy } from "@/lib/copy";
 import { fmtTime, useStore } from "@/lib/store";
 import type { AnchorTimes } from "@/lib/types";
 
 const clampDay = (min: number) => Math.max(0, Math.min(23 * 60 + 30, min));
 
 const rows: { id: keyof AnchorTimes; icon: string; label: string; sub: string }[] = [
-  { id: "meds", icon: "pill", label: "Meds + breakfast", sub: "the peak window starts here" },
-  { id: "lunch", icon: "bowl-food", label: "Lunch", sub: "the food check-in fires here" },
-  { id: "gym", icon: "barbell", label: "Workout slot", sub: "move it any day you want" },
-  { id: "wind", icon: "moon-stars", label: "Wind-down", sub: "the day stops here" },
+  { id: "meds", icon: "pill", label: copy.setup.rows.meds.label, sub: copy.setup.rows.meds.sub },
+  { id: "lunch", icon: "bowl-food", label: copy.setup.rows.lunch.label, sub: copy.setup.rows.lunch.sub },
+  { id: "gym", icon: "barbell", label: copy.setup.rows.gym.label, sub: copy.setup.rows.gym.sub },
+  { id: "wind", icon: "moon-stars", label: copy.setup.rows.wind.label, sub: copy.setup.rows.wind.sub },
 ];
 
 /**
@@ -30,13 +31,12 @@ export default function Setup() {
   return (
     <Screen>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20, gap: 12 }}>
-        <Kicker>First run · about 20 seconds</Kicker>
+        <Kicker>{copy.setup.kicker}</Kicker>
         <T size={26} weight="medium" style={{ letterSpacing: -0.4 }}>
-          When does your day happen?
+          {copy.setup.title}
         </T>
         <T size={13} color={t.neutral[400]} style={{ lineHeight: 19, marginBottom: 4 }}>
-          Four times. Everything else — work blocks, meals, the gym slot — gets built around them,
-          and you can move any of it later.
+          {copy.setup.intro}
         </T>
 
         <View style={{ flex: 1, gap: 8, justifyContent: "center" }}>
@@ -54,22 +54,21 @@ export default function Setup() {
                   {r.sub}
                 </T>
               </View>
-              <IconBtn icon="caret-left" label={`${r.label} earlier`} onPress={() => nudge(r.id, -30)} />
+              <IconBtn icon="caret-left" label={copy.a11y.earlier(r.label)} onPress={() => nudge(r.id, -30)} />
               <T size={14} weight="medium" tabular style={{ width: 56, textAlign: "center" }}>
                 {fmtTime(s.times[r.id])}
               </T>
-              <IconBtn icon="caret-right" label={`${r.label} later`} onPress={() => nudge(r.id, 30)} />
+              <IconBtn icon="caret-right" label={copy.a11y.later(r.label)} onPress={() => nudge(r.id, 30)} />
             </Card>
           ))}
 
           <T size={11.5} color={t.neutral[600]} style={{ marginTop: 4, lineHeight: 17 }}>
-            Wake is set to {fmtTime(s.times.meds - 30)} — half an hour before meds. Change meds and it
-            follows.
+            {copy.setup.wakeNote(fmtTime(s.times.meds - 30))}
           </T>
         </View>
 
         <Btn
-          label="That's my day"
+          label={copy.setup.confirm}
           variant="primary"
           size={15}
           style={{ paddingVertical: 14 }}

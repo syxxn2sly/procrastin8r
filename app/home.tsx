@@ -7,6 +7,7 @@ import {
   Btn, Card, CheckCircleBtn, Field, IconBtn, Kicker, NoteBar, Screen, T, useTheme,
 } from "@/components/ui";
 import { radius } from "@/constants/theme";
+import { copy } from "@/lib/copy";
 import { anchorLabel, noticingLine, useStore } from "@/lib/store";
 import { builtInTemplates } from "@/lib/workouts";
 import type { Task, WeekDay } from "@/lib/types";
@@ -67,24 +68,24 @@ export default function Home() {
   const w: [string, string] = tpl
     ? [tpl.name, tpl.sub]
     : energy === "low"
-      ? ["20-min walk", "low-battery pick — outside counts double"]
-      : ["Move a bit", "nothing planned today · 10 minutes still counts"];
+      ? [copy.home.movement.lowTitle, copy.home.movement.lowSub]
+      : [copy.home.movement.noneTitle, copy.home.movement.noneSub];
 
   const nextLabel =
     energy === "low"
-      ? "next 1 — that's all today asks"
+      ? copy.home.nextLabel.low
       : energy === "high"
-        ? "next 3 — big one first, ride the wave"
-        : "next 3 — that's the whole list";
+        ? copy.home.nextLabel.high
+        : copy.home.nextLabel.mid;
 
   const foodLine =
     s.food === null
-      ? "Eat something."
+      ? copy.home.food.none
       : s.food === "skipped"
-        ? "Skipped — noted, no lecture."
+        ? copy.home.food.skipped
         : s.food === "well"
-          ? "Ate well. Solid."
-          : "Ate. That's what matters.";
+          ? copy.home.food.well
+          : copy.home.food.ate;
 
   const addMacros = () => {
     const cal = Number(calIn) || 0;
@@ -118,14 +119,14 @@ export default function Home() {
         <View>
           <Kicker>{dateLine()}</Kicker>
           <T size={20} weight="medium" style={{ letterSpacing: -0.3 }}>
-            Today
+            {copy.home.today}
           </T>
         </View>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Pressable
             onPress={() => s.update({ theme: s.theme === "dark" ? "light" : "dark" })}
             accessibilityRole="button"
-            accessibilityLabel="Toggle dark or light"
+            accessibilityLabel={copy.a11y.toggleTheme}
             style={({ pressed }) => ({
               width: 30,
               height: 30,
@@ -159,7 +160,7 @@ export default function Home() {
               color={t.accent}
             />
             <T size={12} weight="medium" color={t.neutral[300]}>
-              {energy === "low" ? "low-capacity" : "regular"}
+              {energy === "low" ? copy.home.modeLow : copy.home.modeRegular}
             </T>
           </Pressable>
         </View>
@@ -193,7 +194,7 @@ export default function Home() {
                 >
                   <Icon name="arrow-counter-clockwise" size={12} color={t.neutral[500]} />
                   <T size={11} color={t.neutral[500]}>
-                    undo
+                    {copy.home.undo}
                   </T>
                 </Pressable>
               ) : null}
@@ -207,10 +208,10 @@ export default function Home() {
             {s.tasks.length === 0 ? (
               <Card style={{ gap: 4, paddingVertical: 18, paddingHorizontal: 14 }}>
                 <T size={14} weight="medium">
-                  Nothing on the list.
+                  {copy.home.emptyTitle}
                 </T>
                 <T size={12} color={t.neutral[500]} style={{ lineHeight: 17 }}>
-                  Add the first thing below, or hit Capture and dump whatever&apos;s rattling around.
+                  {copy.home.emptyBody}
                 </T>
               </Card>
             ) : null}
@@ -246,7 +247,7 @@ export default function Home() {
                   <Pressable
                     onPress={() => s.eraseTask(task.id)}
                     accessibilityRole="button"
-                    accessibilityLabel="Erase from list"
+                    accessibilityLabel={copy.a11y.eraseTask}
                     hitSlop={6}
                     style={{ width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
                   >
@@ -260,7 +261,7 @@ export default function Home() {
                 {!task.done ? (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <Btn
-                      label="Start"
+                      label={copy.home.start}
                       variant="primary"
                       size={12.5}
                       style={{ flex: 1, paddingVertical: 8 }}
@@ -269,13 +270,13 @@ export default function Home() {
                     <IconBtn
                       icon="caret-up"
                       size={32}
-                      label="Move up"
+                      label={copy.a11y.moveUp}
                       onPress={() => s.bumpTask(task.id)}
                     />
                     <IconBtn
                       icon="arrows-in-line-horizontal"
                       size={32}
-                      label="Shrink to the first step"
+                      label={copy.a11y.shrink}
                       onPress={() => s.splitTask(task.id)}
                     />
                   </View>
@@ -286,7 +287,7 @@ export default function Home() {
             {queue.length ? (
               <View style={{ gap: 4, paddingTop: 2 }}>
                 <T size={10} color={t.neutral[600]} style={{ letterSpacing: 0.8 }}>
-                  in line — bump one up when it starts to matter
+                  {copy.home.queueLabel}
                 </T>
                 {queue.map((q) => (
                   <View
@@ -296,11 +297,11 @@ export default function Home() {
                     <T size={12} color={t.neutral[400]} numberOfLines={1} style={{ flex: 1 }}>
                       {q.title}
                     </T>
-                    <IconBtn icon="caret-up" size={26} label="Move up" onPress={() => s.bumpTask(q.id)} />
+                    <IconBtn icon="caret-up" size={26} label={copy.a11y.moveUp} onPress={() => s.bumpTask(q.id)} />
                     <Pressable
                       onPress={() => s.eraseTask(q.id)}
                       accessibilityRole="button"
-                      accessibilityLabel="Remove"
+                      accessibilityLabel={copy.a11y.remove}
                       style={{ width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
                     >
                       <Icon name="x" size={12} color={t.neutral[600]} />
@@ -318,14 +319,14 @@ export default function Home() {
                   s.addTask(taskIn);
                   setTaskIn("");
                 }}
-                placeholder="add anything — it joins the line"
+                placeholder={copy.home.addTaskPlaceholder}
                 style={{ flex: 1, fontSize: 12, paddingVertical: 9 }}
               />
               <IconBtn
                 icon="plus"
                 size={36}
                 accent
-                label="Add task"
+                label={copy.a11y.addTask}
                 onPress={() => {
                   s.addTask(taskIn);
                   setTaskIn("");
@@ -337,7 +338,7 @@ export default function Home() {
 
         {/* anchors */}
         <View>
-          <Kicker style={{ marginBottom: 8 }}>Anchors</Kicker>
+          <Kicker style={{ marginBottom: 8 }}>{copy.home.anchorsLabel}</Kicker>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {s.anchors.map((a) => (
               <Pressable
@@ -366,7 +367,7 @@ export default function Home() {
 
         {/* food & water */}
         <View>
-          <Kicker style={{ marginBottom: 8 }}>Food &amp; water</Kicker>
+          <Kicker style={{ marginBottom: 8 }}>{copy.home.foodLabel}</Kicker>
           <Card style={{ gap: 11, paddingVertical: 13, paddingHorizontal: 14 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <T size={14} weight="medium" style={{ flex: 1 }}>
@@ -374,25 +375,25 @@ export default function Home() {
               </T>
               {s.food === null ? (
                 <>
-                  <Btn label="Ate" variant="primary" size={12} style={{ paddingVertical: 7, paddingHorizontal: 12 }} onPress={() => s.logFood("ate")} />
-                  <Btn label="Ate well" size={12} style={{ paddingVertical: 7, paddingHorizontal: 12 }} onPress={() => s.logFood("well")} />
-                  <Btn label="Skipped" variant="quiet" size={12} style={{ paddingVertical: 7, paddingHorizontal: 12 }} onPress={() => s.logFood("skipped")} />
+                  <Btn label={copy.home.ate} variant="primary" size={12} style={{ paddingVertical: 7, paddingHorizontal: 12 }} onPress={() => s.logFood("ate")} />
+                  <Btn label={copy.home.ateWell} size={12} style={{ paddingVertical: 7, paddingHorizontal: 12 }} onPress={() => s.logFood("well")} />
+                  <Btn label={copy.home.skipped} variant="quiet" size={12} style={{ paddingVertical: 7, paddingHorizontal: 12 }} onPress={() => s.logFood("skipped")} />
                 </>
               ) : (
-                <Btn label="undo" variant="quiet" size={11} style={{ paddingVertical: 6, paddingHorizontal: 11 }} onPress={() => s.update({ food: null })} />
+                <Btn label={copy.home.undoShort} variant="quiet" size={11} style={{ paddingVertical: 6, paddingHorizontal: 11 }} onPress={() => s.update({ food: null })} />
               )}
             </View>
 
             {s.safeFoods.length ? (
               <View style={{ gap: 5 }}>
                 <T size={10} color={t.neutral[600]} style={{ letterSpacing: 0.8 }}>
-                  go-tos — tap to log, hold to drop
+                  {copy.home.goTosLabel}
                 </T>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                   {s.safeFoods.map((f) => (
                     <Pressable
                       key={f.id}
-                      onPress={() => s.addMeal(f.name, f.cal, f.pro, `Logged. ${f.pro}g protein, zero decisions.`)}
+                      onPress={() => s.addMeal(f.name, f.cal, f.pro, copy.toast.mealLogged(f.pro))}
                       onLongPress={() => s.removeSafeFood(f.id)}
                       delayLongPress={450}
                       style={({ pressed }) => ({
@@ -422,24 +423,24 @@ export default function Home() {
               <Field
                 value={mealIn}
                 onChangeText={setMealIn}
-                placeholder="what did you eat?"
+                placeholder={copy.home.mealPlaceholder}
                 style={{ flex: 1, fontSize: 12, paddingVertical: 8, backgroundColor: t.bg }}
               />
               <Field
                 value={calIn}
                 onChangeText={(v) => setCalIn(v.replace(/\D/g, ""))}
-                placeholder="cal"
+                placeholder={copy.home.calPlaceholder}
                 inputMode="numeric"
                 style={{ width: 54, fontSize: 12, paddingVertical: 8, paddingHorizontal: 8, backgroundColor: t.bg }}
               />
               <Field
                 value={proIn}
                 onChangeText={(v) => setProIn(v.replace(/\D/g, ""))}
-                placeholder="g pro"
+                placeholder={copy.home.proPlaceholder}
                 inputMode="numeric"
                 style={{ width: 58, fontSize: 12, paddingVertical: 8, paddingHorizontal: 8, backgroundColor: t.bg }}
               />
-              <IconBtn icon="plus" size={32} label="Log meal" onPress={addMacros} />
+              <IconBtn icon="plus" size={32} label={copy.a11y.logMeal} onPress={addMacros} />
               {/* Saving a go-to from the row you just typed is the only moment
                   you actually know the numbers, so the affordance lives here
                   rather than behind a settings screen. */}
@@ -447,7 +448,7 @@ export default function Home() {
                 icon="bookmark-simple"
                 size={32}
                 accent
-                label="Save as a go-to"
+                label={copy.a11y.saveGoTo}
                 onPress={() => {
                   s.addSafeFood(mealIn, Number(calIn) || 0, Number(proIn) || 0);
                   setMealIn("");
@@ -473,7 +474,7 @@ export default function Home() {
                     <Pressable
                       onPress={() => s.removeMeal(m.id)}
                       accessibilityRole="button"
-                      accessibilityLabel={`Remove ${m.name}`}
+                      accessibilityLabel={copy.a11y.removeNamed(m.name)}
                       hitSlop={8}
                     >
                       <Icon name="x" size={11} color={t.neutral[600]} />
@@ -481,7 +482,7 @@ export default function Home() {
                   </View>
                 ))}
                 <T size={11} color={t.neutral[400]} tabular style={{ textAlign: "right", marginTop: 2 }}>
-                  today: {totals.cal} cal · {totals.pro}g pro
+                  {copy.home.mealTotals(totals.cal, totals.pro)}
                 </T>
               </View>
             ) : null}
@@ -499,18 +500,18 @@ export default function Home() {
               <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Icon name="drop" size={16} color={t.accent} />
                 <T size={14} weight="medium">
-                  Water · {s.water} today
+                  {copy.home.water(s.water)}
                 </T>
               </View>
-              <IconBtn icon="minus" label="One less water" onPress={s.removeWater} />
-              <IconBtn icon="plus" accent label="One more water" onPress={s.addWater} />
+              <IconBtn icon="minus" label={copy.a11y.lessWater} onPress={s.removeWater} />
+              <IconBtn icon="plus" accent label={copy.a11y.moreWater} onPress={s.addWater} />
             </View>
           </Card>
         </View>
 
         {/* movement */}
         <View>
-          <Kicker style={{ marginBottom: 8 }}>Movement</Kicker>
+          <Kicker style={{ marginBottom: 8 }}>{copy.home.movementLabel}</Kicker>
           <Card style={{ paddingVertical: 13, paddingHorizontal: 14 }}>
             {s.workoutDone === null ? (
               <>
@@ -527,17 +528,17 @@ export default function Home() {
                 </View>
                 <View style={{ flexDirection: "row", gap: 8 }}>
                   <Btn
-                    label="I worked out"
+                    label={copy.home.workedOut}
                     variant="primary"
                     size={12.5}
                     style={{ flex: 1, paddingVertical: 9 }}
                     onPress={() => s.logWorkout("full")}
                   />
                   <Btn
-                    label="10-min version"
+                    label={copy.home.miniWorkout}
                     size={12.5}
                     style={{ flex: 1, paddingVertical: 9 }}
-                    onPress={() => s.logWorkout("mini", "Showing up was the hard part.")}
+                    onPress={() => s.logWorkout("mini", copy.toast.workoutMini)}
                   />
                   <IconBtn icon="note-pencil" size={36} label="Log details" onPress={() => router.push("/workout")} />
                 </View>
@@ -547,8 +548,8 @@ export default function Home() {
                 <Icon name="check-circle" size={20} color={t.accent} />
                 <T size={14} color={t.neutral[300]} style={{ flex: 1 }}>
                   {s.workoutDone === "mini"
-                    ? "10 minutes done. Full win — that's the rule."
-                    : "Worked out. Logged. Done."}
+                    ? copy.home.workoutDoneMini
+                    : copy.home.workoutDoneFull}
                 </T>
                 <Btn
                   label="undo"
@@ -575,7 +576,7 @@ export default function Home() {
         }}
       >
         <Btn
-          label="Capture"
+          label={copy.home.capture}
           variant="primary"
           icon="plus-circle"
           size={14}
@@ -583,14 +584,14 @@ export default function Home() {
           onPress={() => router.push("/capture")}
         />
         <Btn
-          label="Schedule"
+          label={copy.home.schedule}
           icon="calendar-blank"
           size={13}
           style={{ paddingVertical: 13, paddingHorizontal: 16 }}
           onPress={() => router.push("/schedule")}
         />
         <Btn
-          label="I can't today"
+          label={copy.home.cantToday}
           variant="quiet"
           size={13}
           style={{ paddingVertical: 13, paddingHorizontal: 14 }}

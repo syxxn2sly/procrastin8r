@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
 import { Field, Screen, T, useTheme } from "@/components/ui";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 
 /**
@@ -17,18 +18,18 @@ export default function Blunt() {
   const [taskIn, setTaskIn] = useState("");
 
   const bluntFood =
-    s.food === null ? "none yet" : s.food === "skipped" ? "skipped" : "handled";
+    s.food === null ? copy.blunt.food.none : s.food === "skipped" ? copy.blunt.food.skipped : copy.blunt.food.handled;
 
   return (
     <Screen>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 18, paddingBottom: 16 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <T size={12} color={t.neutral[500]}>
-            the list.
+            {copy.blunt.heading}
           </T>
           <Pressable onPress={() => router.replace("/")} hitSlop={8}>
             <T size={11} color={t.neutral[600]}>
-              mode
+              {copy.blunt.mode}
             </T>
           </Pressable>
         </View>
@@ -74,7 +75,7 @@ export default function Blunt() {
                 s.addTask(taskIn);
                 setTaskIn("");
               }}
-              placeholder="+ add"
+              placeholder={copy.blunt.addPlaceholder}
               style={{
                 flex: 1,
                 fontSize: 14,
@@ -92,7 +93,7 @@ export default function Blunt() {
                 setTaskIn("");
               }}
               accessibilityRole="button"
-              accessibilityLabel="Add task"
+              accessibilityLabel={copy.a11y.addTask}
               style={{ width: 34, alignItems: "center", justifyContent: "center" }}
             >
               <Icon name="plus" size={16} color={t.neutral[400]} />
@@ -111,7 +112,7 @@ export default function Blunt() {
           }}
         >
           <T size={12} color={t.neutral[400]}>
-            water: {s.water}
+            {copy.blunt.water(s.water)}
           </T>
           <Pressable
             onPress={s.addWater}
@@ -128,7 +129,7 @@ export default function Blunt() {
             </T>
           </Pressable>
           <T size={12} color={t.neutral[400]} style={{ flex: 1, textAlign: "right" }}>
-            food: {bluntFood}
+            {bluntFood}
           </T>
           {s.food === null ? (
             <Pressable
@@ -142,7 +143,7 @@ export default function Blunt() {
               }}
             >
               <T size={11} weight="medium" color={t.neutral[300]}>
-                ate
+                {copy.blunt.ate}
               </T>
             </Pressable>
           ) : null}

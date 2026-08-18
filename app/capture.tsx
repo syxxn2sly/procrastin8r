@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
 import { Btn, Card, Field, IconBtn, Kicker, Screen, T, useTheme } from "@/components/ui";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 
 type Step = "dump" | "q1" | "q2" | "done";
@@ -31,27 +32,27 @@ export default function Capture() {
     <Screen>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <IconBtn icon="arrow-left" size={32} label="Back" onPress={() => router.back()} />
+          <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
           <T size={16} weight="medium">
-            Capture
+            {copy.capture.title}
           </T>
         </View>
 
         {step === "dump" ? (
           <>
             <T size={13} color={t.neutral[400]}>
-              Dump it. Sorting is later&apos;s problem.
+              {copy.capture.prompt}
             </T>
             <Field
               value={text}
               onChangeText={setText}
-              placeholder="e.g. cancel the free trial"
+              placeholder={copy.capture.placeholder}
               multiline
               textAlignVertical="top"
               style={{ minHeight: 110, fontSize: 15, padding: 13 }}
             />
             <Btn
-              label="Save it"
+              label={copy.capture.save}
               variant="primary"
               size={14}
               style={{ paddingVertical: 12 }}
@@ -72,7 +73,7 @@ export default function Capture() {
             {s.inbox.length ? (
               <View style={{ flexShrink: 1, gap: 8, minHeight: 0 }}>
                 <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-                  <Kicker style={{ flex: 1 }}>later — bump one up when it starts to matter</Kicker>
+                  <Kicker style={{ flex: 1 }}>{copy.capture.laterLabel}</Kicker>
                   <T size={11} color={t.neutral[600]} tabular>
                     {s.inbox.length}
                   </T>
@@ -96,13 +97,13 @@ export default function Capture() {
                         icon="caret-up"
                         size={30}
                         accent
-                        label={`Pull up ${item}`}
+                        label={copy.a11y.pullUp(item)}
                         onPress={() => s.promoteFromInbox(i)}
                       />
                       <Pressable
                         onPress={() => s.removeFromInbox(i)}
                         accessibilityRole="button"
-                        accessibilityLabel={`Drop ${item}`}
+                        accessibilityLabel={copy.a11y.drop(item)}
                         hitSlop={6}
                         style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
                       >
@@ -112,12 +113,12 @@ export default function Capture() {
                   ))}
                 </ScrollView>
                 <T size={11.5} color={t.neutral[600]}>
-                  They&apos;re safe here. Nothing expires.
+                  {copy.capture.laterFooter}
                 </T>
               </View>
             ) : (
               <T size={11.5} color={t.neutral[600]}>
-                Nothing in the later pile yet. Anything you file lands here.
+                {copy.capture.laterEmpty}
               </T>
             )}
           </>
@@ -125,18 +126,18 @@ export default function Capture() {
 
         {step === "q1" ? (
           <View style={{ flex: 1, justifyContent: "center", gap: 14 }}>
-            <Kicker>Saved. Two questions — then it&apos;s filed.</Kicker>
+            <Kicker>{copy.capture.triageKicker}</Kicker>
             <Card>
               <T size={14.5} weight="medium">
                 &quot;{pending}&quot;
               </T>
             </Card>
             <T size={21} weight="medium" style={{ marginTop: 6 }}>
-              Due soon?
+              {copy.capture.q1}
             </T>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <Btn
-                label="Yes"
+                label={copy.capture.yes}
                 variant="primary"
                 size={14}
                 style={{ flex: 1, paddingVertical: 14 }}
@@ -146,7 +147,7 @@ export default function Capture() {
                 }}
               />
               <Btn
-                label="Nah"
+                label={copy.capture.no}
                 size={14}
                 style={{ flex: 1, paddingVertical: 14 }}
                 onPress={() => {
@@ -166,25 +167,25 @@ export default function Capture() {
               </T>
             </Card>
             <T size={21} weight="medium" style={{ marginTop: 6 }}>
-              If you skip it?
+              {copy.capture.q2}
             </T>
             <View style={{ gap: 9 }}>
               <Btn
-                label="Shrug — nothing happens"
+                label={copy.capture.shrug}
                 variant="quiet"
                 size={14}
                 style={{ paddingVertical: 13, justifyContent: "flex-start" }}
                 onPress={() => file("shrug")}
               />
               <Btn
-                label="Bad — someone's waiting on it"
+                label={copy.capture.bad}
                 variant="quiet"
                 size={14}
                 style={{ paddingVertical: 13, justifyContent: "flex-start" }}
                 onPress={() => file("bad")}
               />
               <Btn
-                label="Very bad — real consequences"
+                label={copy.capture.veryBad}
                 variant="quiet"
                 size={14}
                 style={{ paddingVertical: 13, justifyContent: "flex-start" }}
@@ -198,15 +199,15 @@ export default function Capture() {
           <View style={{ flex: 1, justifyContent: "center", alignItems: "flex-start", gap: 12 }}>
             <Icon name="tray-arrow-down" size={34} color={t.accent} />
             <T size={21} weight="medium">
-              {filedTo === "today" ? "Filed: Today." : "Filed: Later."}
+              {filedTo === "today" ? copy.capture.filedToday : copy.capture.filedLater}
             </T>
             <T size={13} color={t.neutral[400]} style={{ lineHeight: 19 }}>
               {filedTo === "today"
-                ? "It's in the Next 3 line. You'll see it when it's its turn — not before."
-                : "Out of your head, off today's plate. It's in the later pile on this screen — pull it up whenever it starts to matter."}
+                ? copy.capture.filedTodaySub
+                : copy.capture.filedLaterSub}
             </T>
             <Btn
-              label="Back to Today"
+              label={copy.capture.backToToday}
               variant="primary"
               size={14}
               style={{ marginTop: 8, paddingVertical: 12, paddingHorizontal: 22 }}

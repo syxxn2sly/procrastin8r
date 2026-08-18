@@ -5,6 +5,7 @@ import * as Calendar from "expo-calendar";
 
 import { Icon } from "@/components/icon";
 import { Btn, Card, CheckCircleBtn, IconBtn, Kicker, Screen, T, useTheme } from "@/components/ui";
+import { copy } from "@/lib/copy";
 import { fmtTime, useStore } from "@/lib/store";
 import type { CustomBlock } from "@/lib/types";
 
@@ -68,7 +69,7 @@ export default function ImportCalendar() {
         .map((e): Found => {
           const startsAt = new Date(e.startDate as string);
           const min = minutesOf(startsAt);
-          const title = (e.title ?? "").trim() || "untitled event";
+          const title = (e.title ?? "").trim() || copy.importCalendar.untitledEvent;
           return {
             key: String(e.id),
             title,
@@ -83,7 +84,7 @@ export default function ImportCalendar() {
       setError(null);
       setStatus("ready");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not read the calendar.");
+      setError(e instanceof Error ? e.message : copy.importCalendar.error);
       setStatus("ready");
     }
     // Deliberately depends on nothing: whether an event is already on the day
@@ -126,12 +127,12 @@ export default function ImportCalendar() {
       id: `c${Date.now() + i}`,
       min: e.min,
       title: e.title,
-      sub: `from ${e.calendarTitle}`,
+      sub: copy.importCalendar.fromCalendar(e.calendarTitle),
       icon: "calendar-blank",
       kind: "school",
     }));
     s.update({ customBlocks: [...s.customBlocks, ...blocks] });
-    s.cheer(`${blocks.length} ${blocks.length === 1 ? "event" : "events"} on the timeline.`);
+    s.cheer(copy.toast.imported(blocks.length));
     router.back();
   };
 
@@ -141,31 +142,30 @@ export default function ImportCalendar() {
     <Screen>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <IconBtn icon="arrow-left" size={32} label="Back" onPress={() => router.back()} />
+          <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
           <T size={16} weight="medium">
-            Import from calendar
+            {copy.importCalendar.title}
           </T>
         </View>
 
         {status === "unsupported" ? (
           <T size={13} color={t.neutral[400]} style={{ lineHeight: 19 }}>
-            Calendar access only works in the app on your phone, not in a browser.
+            {copy.importCalendar.unsupported}
           </T>
         ) : null}
 
         {status === "loading" || status === "asking" ? (
           <T size={13} color={t.neutral[400]}>
-            Reading today&apos;s events…
+            {copy.importCalendar.loading}
           </T>
         ) : null}
 
         {status === "denied" ? (
           <View style={{ gap: 12 }}>
             <T size={13} color={t.neutral[400]} style={{ lineHeight: 19 }}>
-              Calendar access is off. You can turn it on in Settings › Procrastin8r › Calendars, or
-              just add blocks by hand on the Edit day screen — nothing here depends on it.
+              {copy.importCalendar.denied}
             </T>
-            <Btn label="Back to Edit day" variant="primary" onPress={() => router.back()} />
+            <Btn label={copy.importCalendar.back} variant="primary" onPress={() => router.back()} />
           </View>
         ) : null}
 
@@ -179,14 +179,13 @@ export default function ImportCalendar() {
           events.length === 0 ? (
             <View style={{ gap: 12 }}>
               <T size={13} color={t.neutral[400]} style={{ lineHeight: 19 }}>
-                Nothing timed on your calendar today. All-day events are skipped — they have no place
-                to sit on a timeline.
+                {copy.importCalendar.empty}
               </T>
-              <Btn label="Back to Edit day" variant="primary" onPress={() => router.back()} />
+              <Btn label={copy.importCalendar.back} variant="primary" onPress={() => router.back()} />
             </View>
           ) : (
             <>
-              <Kicker>today&apos;s events — untick anything you don&apos;t want</Kicker>
+              <Kicker>{copy.importCalendar.listLabel}</Kicker>
               <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
                 {events.map((e) => (
                   <Card
@@ -208,7 +207,7 @@ export default function ImportCalendar() {
                         {e.title}
                       </T>
                       <T size={11} color={t.neutral[500]}>
-                        {isExisting(e) ? "already on your day" : e.calendarTitle}
+                        {isExisting(e) ? copy.importCalendar.alreadyAdded : e.calendarTitle}
                       </T>
                     </View>
                     <CheckCircleBtn
@@ -227,8 +226,8 @@ export default function ImportCalendar() {
               <Btn
                 label={
                   pickedCount === 0
-                    ? "Nothing selected"
-                    : `Add ${pickedCount} ${pickedCount === 1 ? "block" : "blocks"}`
+                    ? copy.importCalendar.nothingSelected
+                    : copy.importCalendar.addBlocks(pickedCount)
                 }
                 variant="primary"
                 size={14}
@@ -237,7 +236,7 @@ export default function ImportCalendar() {
                 onPress={importPicked}
               />
               <T size={11} color={t.neutral[600]} style={{ lineHeight: 16 }}>
-                Copied onto your day only. Procrastin8r never writes to your calendar.
+                {copy.importCalendar.readOnlyNote}
               </T>
             </>
           )
@@ -246,7 +245,7 @@ export default function ImportCalendar() {
         {status === "unsupported" ? (
           <Pressable onPress={() => router.back()} style={{ paddingVertical: 8 }}>
             <T size={13} color={t.accentRamp[300]}>
-              <Icon name="arrow-left" size={12} color={t.accentRamp[300]} /> back
+              <Icon name="arrow-left" size={12} color={t.accentRamp[300]} /> {copy.a11y.back}
             </T>
           </Pressable>
         ) : null}

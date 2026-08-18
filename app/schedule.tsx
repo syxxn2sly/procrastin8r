@@ -5,6 +5,7 @@ import { Icon } from "@/components/icon";
 import { Btn, Card, CheckCircleBtn, IconBtn, NoteBar, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
 import { buildSchedule, currentBlockId } from "@/lib/schedule";
+import { copy } from "@/lib/copy";
 import { fmtTime, useStore } from "@/lib/store";
 
 function Stat({ label, value, pct }: { label: string; value: string; pct: `${number}%` }) {
@@ -60,17 +61,17 @@ export default function Schedule() {
   return (
     <Screen>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 8 }}>
-        <IconBtn icon="arrow-left" size={32} label="Back" onPress={() => router.back()} />
+        <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
         <View style={{ flex: 1 }}>
           <T size={16} weight="medium">
-            Schedule
+            {copy.schedule.title}
           </T>
           <T size={11} color={t.neutral[500]}>
-            {heldCount} of {real.length} held · dashed = suggestions
+            {copy.schedule.progress(heldCount, real.length)}
           </T>
         </View>
         <Btn
-          label="Edit day"
+          label={copy.schedule.editDay}
           icon="sliders-horizontal"
           size={12}
           style={{ paddingVertical: 8, paddingHorizontal: 12 }}
@@ -80,26 +81,25 @@ export default function Schedule() {
 
       <View style={{ flexDirection: "row", gap: 8, marginHorizontal: 20, marginBottom: 10 }}>
         <Stat
-          label="Tasks"
+          label={copy.schedule.statTasks}
           value={`${tasksDone}/${s.tasks.length}`}
           pct={`${s.tasks.length ? Math.round((100 * tasksDone) / s.tasks.length) : 0}%` as const}
         />
         <Stat
-          label="Blocks held"
+          label={copy.schedule.statBlocks}
           value={`${heldCount}/${real.length}`}
           pct={`${real.length ? Math.round((100 * heldCount) / real.length) : 0}%` as const}
         />
         <Stat
-          label="Workout"
-          value={s.workoutDone ? (s.workoutDone === "mini" ? "10-min ✓" : "Done ✓") : fmtTime(s.times.gym)}
+          label={copy.schedule.statWorkout}
+          value={s.workoutDone ? (s.workoutDone === "mini" ? copy.schedule.workoutMini : copy.schedule.workoutDone) : fmtTime(s.times.gym)}
           pct={s.workoutDone ? "100%" : "0%"}
         />
       </View>
 
       <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
         <NoteBar icon="pill">
-          Meds peak {fmtTime(s.times.meds + 120)}–{fmtTime(s.times.meds + 300)}. Hard work sits there;
-          easy stuff after. The gym slot came from your battery, not a rulebook.
+          {copy.schedule.medsNote(fmtTime(s.times.meds + 120), fmtTime(s.times.meds + 300))}
         </NoteBar>
       </View>
 
@@ -172,14 +172,14 @@ export default function Schedule() {
                       {b.title}
                     </T>
                     <T size={11} color={t.neutral[500]}>
-                      {ghost ? `${b.sub} · tap + to add` : b.sub}
+                      {ghost ? copy.schedule.ghostHint(b.sub) : b.sub}
                     </T>
                   </View>
 
                   {ghost || b.tag || b.suggest ? (
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={b.suggest ? `Un-add ${b.title}` : `Remove ${b.title}`}
+                      accessibilityLabel={b.suggest ? copy.a11y.unAdd(b.title) : copy.a11y.removeNamed(b.title)}
                       onPress={() => {
                         if (ghost) return;
                         if (b.suggest) {
@@ -209,7 +209,7 @@ export default function Schedule() {
                         color={ghost ? t.neutral[400] : t.accentRamp[300]}
                         style={{ letterSpacing: 0.5 }}
                       >
-                        {ghost ? "suggestion" : b.removable ? `${b.tag} ×` : "added ×"}
+                        {ghost ? copy.schedule.suggestionTag : b.removable ? `${b.tag} ×` : copy.schedule.addedTag}
                       </T>
                     </Pressable>
                   ) : null}
@@ -222,17 +222,17 @@ export default function Schedule() {
                     onPress={() => {
                       if (ghost) {
                         s.update({ accepted: { ...s.accepted, [b.id]: true } });
-                        s.cheer("Added. Your call, always.");
+                        s.cheer(copy.toast.suggestionAdded);
                         return;
                       }
                       if (b.id === "gym") {
-                        if (s.workoutDone === null) s.logWorkout("full", "Workout held. Logged everywhere.");
+                        if (s.workoutDone === null) s.logWorkout("full", copy.toast.workoutHeld);
                         else s.update({ workoutDone: null });
                         return;
                       }
                       const was = !!s.schedDone[b.id];
                       s.update({ schedDone: { ...s.schedDone, [b.id]: !was } });
-                      if (!was) s.cheer("Block held. The day is holding shape.");
+                      if (!was) s.cheer(copy.toast.blockHeld);
                     }}
                   />
                 </View>
@@ -242,7 +242,7 @@ export default function Schedule() {
                     <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: t.accent }} />
                     <View style={{ flex: 1, height: 1, backgroundColor: t.accentRamp[800] }} />
                     <T size={10} color={t.accentRamp[300]} style={{ letterSpacing: 0.8 }}>
-                      now
+                      {copy.schedule.now}
                     </T>
                   </View>
                 ) : null}

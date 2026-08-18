@@ -6,6 +6,7 @@ import { Icon } from "@/components/icon";
 import { Btn, Card, Field, IconBtn, Screen, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
 import { defaultBlockTime } from "@/lib/schedule";
+import { copy } from "@/lib/copy";
 import { fmtTime, useStore } from "@/lib/store";
 import type { AnchorTimes } from "@/lib/types";
 
@@ -27,16 +28,16 @@ export default function EditDay() {
   const [newBlock, setNewBlock] = useState("");
 
   const rows: Row[] = [
-    { id: "wake", icon: "sun-horizon", label: "Wake", sub: "anchor · everything counts from here", fixed: true },
-    { id: "meds", icon: "pill", label: "Meds + breakfast", sub: "work blocks follow the peak window" },
-    { id: "lunch", icon: "bowl-food", label: "Lunch", sub: "anchor · food check-in fires here" },
+    { id: "wake", icon: "sun-horizon", label: copy.editDay.rows.wake.label, sub: copy.editDay.rows.wake.sub, fixed: true },
+    { id: "meds", icon: "pill", label: copy.editDay.rows.meds.label, sub: copy.editDay.rows.meds.sub },
+    { id: "lunch", icon: "bowl-food", label: copy.editDay.rows.lunch.label, sub: copy.editDay.rows.lunch.sub },
     {
       id: "gym",
       icon: "barbell",
-      label: "Workout slot",
-      sub: s.autoGym ? "auto — adjust anyway if you want" : "manual — your pick",
+      label: copy.editDay.rows.gym.label,
+      sub: s.autoGym ? copy.editDay.rows.gym.subAuto : copy.editDay.rows.gym.subManual,
     },
-    { id: "wind", icon: "moon-stars", label: "Wind-down", sub: "anchor · drift alerts key off this" },
+    { id: "wind", icon: "moon-stars", label: copy.editDay.rows.wind.label, sub: copy.editDay.rows.wind.sub },
   ];
 
   const timeOf = (r: Row) => (r.id === "wake" ? s.times.meds - 30 : s.times[r.id as keyof AnchorTimes]);
@@ -61,26 +62,25 @@ export default function EditDay() {
     s.update({
       customBlocks: [
         ...s.customBlocks,
-        { id: `c${Date.now()}`, min, title: clean, sub: "you added this", icon: "bookmark-simple", kind: "school" },
+        { id: `c${Date.now()}`, min, title: clean, sub: copy.editDay.addedBlockSub, icon: "bookmark-simple", kind: "school" },
       ],
     });
     setNewBlock("");
-    s.cheer(`On the timeline at ${fmtTime(min)} — nudge it anytime.`);
+    s.cheer(copy.toast.blockAdded(fmtTime(min)));
   };
 
   return (
     <Screen>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <IconBtn icon="arrow-left" size={32} label="Back" onPress={() => router.back()} />
+          <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
           <T size={16} weight="medium">
-            Edit day
+            {copy.editDay.title}
           </T>
         </View>
 
         <T size={12.5} color={t.neutral[400]} style={{ lineHeight: 18 }}>
-          Set the anchors once. Everything else — work blocks, meals, the gym slot — flexes around them
-          on its own.
+          {copy.editDay.intro}
         </T>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled">
@@ -98,11 +98,11 @@ export default function EditDay() {
                   {r.sub}
                 </T>
               </View>
-              <IconBtn icon="caret-left" label={`${r.label} earlier`} onPress={() => nudge(r, -30)} />
+              <IconBtn icon="caret-left" label={copy.a11y.earlier(r.label)} onPress={() => nudge(r, -30)} />
               <T size={14} weight="medium" tabular style={{ width: 56, textAlign: "center" }}>
                 {fmtTime(timeOf(r))}
               </T>
-              <IconBtn icon="caret-right" label={`${r.label} later`} onPress={() => nudge(r, 30)} />
+              <IconBtn icon="caret-right" label={copy.a11y.later(r.label)} onPress={() => nudge(r, 30)} />
             </Card>
           ))}
 
@@ -119,12 +119,12 @@ export default function EditDay() {
                   {c.title}
                 </T>
                 <T size={11} color={t.neutral[500]} numberOfLines={1}>
-                  {c.sub} · remove with ×
+                  {copy.editDay.yourBlockSub(c.sub)}
                 </T>
               </View>
               <IconBtn
                 icon="caret-left"
-                label={`${c.title} earlier`}
+                label={copy.a11y.earlier(c.title)}
                 onPress={() => moveBlock(c.id, -30)}
               />
               <T size={14} weight="medium" tabular style={{ width: 56, textAlign: "center" }}>
@@ -132,13 +132,13 @@ export default function EditDay() {
               </T>
               <IconBtn
                 icon="caret-right"
-                label={`${c.title} later`}
+                label={copy.a11y.later(c.title)}
                 onPress={() => moveBlock(c.id, 30)}
               />
               <Pressable
                 onPress={() => s.update({ customBlocks: s.customBlocks.filter((x) => x.id !== c.id) })}
                 accessibilityRole="button"
-                accessibilityLabel={`Remove ${c.title}`}
+                accessibilityLabel={copy.a11y.removeNamed(c.title)}
                 hitSlop={6}
                 style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
               >
@@ -151,11 +151,11 @@ export default function EditDay() {
             <Field
               value={newBlock}
               onChangeText={setNewBlock}
-              placeholder="Add a block: class, shift, appointment…"
+              placeholder={copy.editDay.addBlockPlaceholder}
               onSubmitEditing={addBlock}
               style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 13 }}
             />
-            <IconBtn icon="plus" size={44} accent label="Add block" onPress={addBlock} />
+            <IconBtn icon="plus" size={44} accent label={copy.a11y.addBlock} onPress={addBlock} />
           </View>
 
           <Pressable
@@ -174,7 +174,7 @@ export default function EditDay() {
           >
             <Icon name="calendar-plus" size={18} color={t.accent} />
             <T size={13} weight="medium" color={t.neutral[300]} style={{ flex: 1, lineHeight: 18 }}>
-              Import a calendar (school, work) — events land as blocks
+              {copy.editDay.importCalendar}
             </T>
           </Pressable>
 
@@ -182,17 +182,17 @@ export default function EditDay() {
             <Icon name="barbell" size={18} color={s.autoGym ? t.accent : t.neutral[500]} />
             <View style={{ flex: 1 }}>
               <T size={13.5} weight="medium">
-                Auto-slot the workout
+                {copy.editDay.autoGym}
               </T>
               <T size={11} color={t.neutral[500]} style={{ lineHeight: 16 }}>
-                Placed from your battery + recovery. Off = you pick the time.
+                {copy.editDay.autoGymSub}
               </T>
             </View>
             <Pressable
               onPress={() => s.update({ autoGym: !s.autoGym })}
               accessibilityRole="switch"
               accessibilityState={{ checked: s.autoGym }}
-              accessibilityLabel="Auto-slot the workout"
+              accessibilityLabel={copy.editDay.autoGym}
               style={{
                 width: 46,
                 height: 27,
@@ -218,7 +218,7 @@ export default function EditDay() {
         </ScrollView>
 
         <Btn
-          label="Done — rebuild my day"
+          label={copy.editDay.done}
           variant="primary"
           size={14}
           style={{ paddingVertical: 13 }}

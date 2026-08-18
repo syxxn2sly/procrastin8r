@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import createContextHook from "@nkzw/create-context-hook";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { copy } from "@/lib/copy";
 import type {
   Anchor,
   SafeFood,
@@ -77,10 +78,10 @@ const seedAnchors: Anchor[] = [
 /** Anchor names follow the anchor times rather than being frozen at install. */
 export const anchorLabel = (id: Anchor["id"], times: AnchorTimes) =>
   id === "wake"
-    ? `Up by ${fmtTime(times.meds - 30)}`
+    ? copy.home.anchor.wake(fmtTime(times.meds - 30))
     : id === "lunch"
-      ? "Eat lunch"
-      : `Wind-down at ${fmtTime(times.wind)}`;
+      ? copy.home.anchor.lunch
+      : copy.home.anchor.wind(fmtTime(times.wind));
 
 const todayKey = () => {
   const d = new Date();
@@ -159,19 +160,9 @@ export const nowStr = () => {
   return fmtTime(d.getHours() * 60 + d.getMinutes());
 };
 
-const wins = [
-  "Logged. That's momentum.",
-  "Done is done.",
-  "One less thing.",
-  "That counts. All of it.",
-  "Look at you, deciding things.",
-];
+const wins = copy.toast.wins;
 
-export const splitSteps = [
-  "First step: open it. That's the whole task now.",
-  "First step: 3 minutes, then you're allowed to stop.",
-  "First step: write one bad sentence.",
-];
+export const splitSteps = copy.splitSteps;
 
 export const [StoreProvider, useStore] = createContextHook(() => {
   const [state, setState] = useState<State>(initial);
@@ -243,22 +234,18 @@ export const [StoreProvider, useStore] = createContextHook(() => {
     if (state.water === 0) {
       setNudge({
         text: [
-          "water's at zero. bottle. now-ish.",
-          "still zero water. this is the follow-up.",
-          "third ask: drink water. i'll stop after this one.",
+          ...copy.nudge.water.messages,
         ][lvl],
-        doLabel: "logged +1",
+        doLabel: copy.nudge.water.action,
         kind: "water",
       });
       nudgeLevel.current += 1;
     } else if (state.food === null) {
       setNudge({
         text: [
-          "nothing eaten yet. anything counts.",
-          "second nudge: eat literally anything.",
-          "last one: food. then i'm quiet.",
+          ...copy.nudge.food.messages,
         ][lvl],
-        doLabel: "ate something",
+        doLabel: copy.nudge.food.action,
         kind: "food",
       });
       nudgeLevel.current += 1;
@@ -294,7 +281,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
     (id: string) => {
       setPrevTasks(state.tasks);
       update({ tasks: state.tasks.filter((t) => t.id !== id) });
-      cheer("Erased. Undo is right there if you change your mind.");
+      cheer(copy.toast.taskErased);
     },
     [state.tasks, update, cheer],
   );
@@ -314,20 +301,20 @@ export const [StoreProvider, useStore] = createContextHook(() => {
     (id: string) => {
       const step = splitSteps[Math.floor(Math.random() * splitSteps.length)];
       update({ tasks: state.tasks.map((t) => (t.id === id ? { ...t, meta: step } : t)) });
-      cheer("Shrunk it. The first step is the task now.");
+      cheer(copy.toast.taskSplit);
     },
     [state.tasks, update, cheer],
   );
 
   const addTask = useCallback(
-    (title: string, meta = "added by you") => {
+    (title: string, meta: string = copy.meta.addedByYou) => {
       const clean = title.trim();
       if (!clean) return;
       setPrevTasks(state.tasks);
       update({
         tasks: [...state.tasks, { id: `t${Date.now()}`, title: clean, meta, done: false }],
       });
-      cheer("On the list. It'll surface when it's time.");
+      cheer(copy.toast.taskAdded);
     },
     [state.tasks, update, cheer],
   );
@@ -349,7 +336,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
     (id: string) => {
       const was = state.anchors.find((a) => a.id === id)?.done;
       update({ anchors: state.anchors.map((a) => (a.id === id ? { ...a, done: !a.done } : a)) });
-      if (!was) cheer("Anchor held. That's the backbone.");
+      if (!was) cheer(copy.toast.anchorHeld);
     },
     [state.anchors, update, cheer],
   );
@@ -357,8 +344,8 @@ export const [StoreProvider, useStore] = createContextHook(() => {
   const logFood = useCallback(
     (v: FoodState) => {
       update({ food: v });
-      if (v === "ate") cheer("Fed. Brain works better now.");
-      else if (v === "well") cheer("Fed, and well. Fancy.");
+      if (v === "ate") cheer(copy.toast.fed);
+      else if (v === "well") cheer(copy.toast.fedWell);
     },
     [update, cheer],
   );
@@ -369,7 +356,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
         meals: [...s.meals, { id: `m${Date.now()}`, name, cal, pro, at: nowStr() }],
         food: s.food === null || s.food === "skipped" ? "ate" : s.food,
       }));
-      cheer(msg ?? "Counted. That's all the math you owe today.");
+      cheer(msg ?? copy.toast.macrosCounted);
     },
     [update, cheer],
   );
@@ -379,11 +366,11 @@ export const [StoreProvider, useStore] = createContextHook(() => {
       const clean = name.trim();
       if (!clean) return;
       if (state.safeFoods.some((f) => f.name.toLowerCase() === clean.toLowerCase())) {
-        cheer("Already one of your go-tos.");
+        cheer(copy.toast.goToDuplicate);
         return;
       }
       update((s) => ({ safeFoods: [...s.safeFoods, { id: `f${Date.now()}`, name: clean, cal, pro }] }));
-      cheer("Saved as a go-to. One tap from now on.");
+      cheer(copy.toast.goToSaved);
     },
     [state.safeFoods, update, cheer],
   );
@@ -391,7 +378,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
   const removeSafeFood = useCallback(
     (id: string) => {
       update((s) => ({ safeFoods: s.safeFoods.filter((f) => f.id !== id) }));
-      cheer("Dropped from your go-tos.");
+      cheer(copy.toast.goToDropped);
     },
     [update, cheer],
   );
@@ -407,7 +394,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
 
   const addWater = useCallback(() => {
     update((s) => ({ water: s.water + 1 }));
-    if (state.water === 0) cheer("First water of the day. Counts.");
+    if (state.water === 0) cheer(copy.toast.firstWater);
   }, [state.water, update, cheer]);
 
   const removeWater = useCallback(
@@ -418,7 +405,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
   const logWorkout = useCallback(
     (v: WorkoutState, msg?: string) => {
       update({ workoutDone: v });
-      if (v) cheer(msg ?? "Workout logged. No details needed.");
+      if (v) cheer(msg ?? copy.toast.workoutLogged);
     },
     [update, cheer],
   );
@@ -430,7 +417,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
       const clean = text.trim();
       if (!clean) return;
       update((s) => ({ inbox: [...s.inbox, clean] }));
-      cheer("Dumped to inbox. Back to the task.");
+      cheer(copy.toast.dumped);
     },
     [update, cheer],
   );
@@ -448,9 +435,9 @@ export const [StoreProvider, useStore] = createContextHook(() => {
       update((s) => ({ inbox: s.inbox.filter((_, i) => i !== index) }));
       setPrevTasks(state.tasks);
       update((s) => ({
-        tasks: [...s.tasks, { id: `t${Date.now()}`, title, meta: "pulled up from later", done: false }],
+        tasks: [...s.tasks, { id: `t${Date.now()}`, title, meta: copy.meta.pulledUp, done: false }],
       }));
-      cheer("Pulled up. It's in the line now.");
+      cheer(copy.toast.pulledUp);
     },
     [state.inbox, state.tasks, update, cheer],
   );
@@ -468,7 +455,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
   const fileCapture = useCallback(
     (title: string, dueSoon: boolean, severity: "shrug" | "bad" | "verybad") => {
       const today = dueSoon || severity === "verybad";
-      if (today) addTask(title, "new · auto-triaged");
+      if (today) addTask(title, copy.meta.autoTriaged);
       else update((s) => ({ inbox: [...s.inbox, title] }));
       return today ? "today" : "later";
     },
@@ -527,9 +514,9 @@ export const [StoreProvider, useStore] = createContextHook(() => {
  * user chooses. Order matters: food outranks water, water outranks the list.
  */
 export const noticingLine = (food: FoodState, water: number, openTasks: number) => {
-  if (food === "skipped") return "Skipped a meal — noted, no lecture. Next food window is ~2pm.";
-  if (food === null) return "Nothing eaten since you woke up. Not a crisis. Just saying.";
-  if (water === 0) return "Food's handled. Water is at zero, though. Bottle's right there.";
-  if (openTasks === 0) return "List cleared. You're free. Go be a person.";
-  return `Fed and watered. ${openTasks} left — the top one takes 5 minutes.`;
+  if (food === "skipped") return copy.home.noticing.skipped;
+  if (food === null) return copy.home.noticing.nothingEaten;
+  if (water === 0) return copy.home.noticing.noWater;
+  if (openTasks === 0) return copy.home.noticing.allClear;
+  return copy.home.noticing.remaining(openTasks);
 };

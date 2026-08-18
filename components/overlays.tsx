@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/icon";
 import { Btn, T, useTheme } from "@/components/ui";
 import { radius } from "@/constants/theme";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 
 /** Praise for anything logged. Fades itself out; never needs dismissing. */
@@ -99,7 +100,7 @@ export function Nudge() {
           <Icon name="eye" size={12} color={t.accentRamp[200]} />
         </View>
         <T size={10} color={t.neutral[500]} style={{ letterSpacing: 0.6 }}>
-          navigator · now
+          {copy.nudge.from}
         </T>
       </View>
       <T size={13} weight="medium" style={{ lineHeight: 18 }}>
@@ -107,7 +108,7 @@ export function Nudge() {
       </T>
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Btn label={nudge.doLabel} variant="primary" size={12} onPress={applyNudge} style={{ flex: 1 }} />
-        <Btn label="later" variant="quiet" size={12} onPress={() => dismissNudge(true)} />
+        <Btn label={copy.nudge.later} variant="quiet" size={12} onPress={() => dismissNudge(true)} />
       </View>
     </View>
   );

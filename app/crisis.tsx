@@ -3,6 +3,7 @@ import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
 import { Btn, Card, Kicker, Screen, T, useTheme } from "@/components/ui";
+import { copy } from "@/lib/copy";
 import { anchorLabel, useStore } from "@/lib/store";
 
 /**
@@ -20,28 +21,28 @@ export default function Crisis() {
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 26, gap: 16 }}>
-        <Kicker>Low-capacity mode</Kicker>
+        <Kicker>{copy.crisis.kicker}</Kicker>
         <T size={24} weight="medium" style={{ letterSpacing: -0.35 }}>
-          Everything else is gone until you say so.
+          {copy.crisis.title}
         </T>
         <T size={13} color={t.neutral[400]} style={{ marginBottom: 6 }}>
-          Three things. Any one of them is a win.
+          {copy.crisis.sub}
         </T>
 
         <View style={{ gap: 10 }}>
           <Card style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 15 }}>
             <Icon name="bowl-food" size={20} color={t.accent} />
             <T size={14.5} weight="medium" style={{ flex: 1 }}>
-              Eat one thing
+              {copy.crisis.eat}
             </T>
             <Btn
-              label={s.crisisAte ? "Done ✓" : "Ate"}
+              label={s.crisisAte ? copy.crisis.doneCheck : copy.crisis.ateButton}
               variant="primary"
               size={12.5}
               style={{ paddingVertical: 8, paddingHorizontal: 14 }}
               onPress={() => {
                 s.update({ crisisAte: true, food: s.food ?? "ate" });
-                s.cheer("That's the big one. Rest is optional.");
+                s.cheer(copy.toast.crisisAte);
               }}
             />
           </Card>
@@ -49,10 +50,10 @@ export default function Crisis() {
           <Card style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 15 }}>
             <Icon name="drop" size={20} color={t.accent} />
             <T size={14.5} weight="medium" style={{ flex: 1 }}>
-              Water · {s.water}
+              {copy.crisis.water(s.water)}
             </T>
             <Btn
-              label="+1"
+              label={copy.crisis.plusOne}
               variant="primary"
               size={12.5}
               style={{ paddingVertical: 8, paddingHorizontal: 14 }}
@@ -63,24 +64,24 @@ export default function Crisis() {
           <Card style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 15 }}>
             <Icon name="anchor-simple" size={20} color={t.accent} />
             <T size={14.5} weight="medium" style={{ flex: 1 }}>
-              {anchor ? anchorLabel(anchor.id, s.times) : "Wind-down"}
+              {anchor ? anchorLabel(anchor.id, s.times) : copy.crisis.fallbackAnchor}
             </T>
             <Btn
-              label={s.crisisAnchorDone ? "Done ✓" : "Done"}
+              label={s.crisisAnchorDone ? copy.crisis.doneCheck : copy.crisis.doneButton}
               variant="primary"
               size={12.5}
               style={{ paddingVertical: 8, paddingHorizontal: 14 }}
               onPress={() => {
                 s.update({ crisisAnchorDone: true });
                 if (anchor && !anchor.done) s.toggleAnchor(anchor.id);
-                else s.cheer("Anchor held on a bad day. Huge.");
+                else s.cheer(copy.toast.crisisAnchor);
               }}
             />
           </Card>
         </View>
 
         <Btn
-          label="Bring the rest back"
+          label={copy.crisis.bringBack}
           variant="quiet"
           style={{ marginTop: 10, paddingVertical: 12 }}
           onPress={() => {
