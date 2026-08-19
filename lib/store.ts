@@ -26,8 +26,14 @@ import type { ThemeName } from "@/constants/theme";
  */
 const STORAGE_KEY = "procrastin8r.state.v2";
 
+/**
+ * Three hours between nudges. The old gap was seconds, which reads as nagging;
+ * this is roughly "once a morning, once an afternoon, once an evening".
+ */
+const NUDGE_GAP_MS = 3 * 60 * 60 * 1000;
+
 /** Minutes past midnight — the unit every schedule time is stored in. */
-const MIN = { meds: 510, lunch: 780, gym: 1050, wind: 1320 };
+const MIN = { wake: 480, meds: 510, lunch: 780, gym: 1050, wind: 1320 };
 
 export type Nudge = {
   text: string;
@@ -64,6 +70,7 @@ type State = {
   wTemplate: string;
   wSets: Record<string, number>;
   customTpls: WorkoutTemplate[];
+  hiddenTpls: Record<string, boolean>;
   exDetails: Record<string, string>;
   theme: ThemeName;
   focusTotalMin: number;
@@ -78,7 +85,7 @@ const seedAnchors: Anchor[] = [
 /** Anchor names follow the anchor times rather than being frozen at install. */
 export const anchorLabel = (id: Anchor["id"], times: AnchorTimes) =>
   id === "wake"
-    ? copy.home.anchor.wake(fmtTime(times.meds - 30))
+    ? copy.home.anchor.wake(fmtTime(times.wake))
     : id === "lunch"
       ? copy.home.anchor.lunch
       : copy.home.anchor.wind(fmtTime(times.wind));
@@ -120,6 +127,7 @@ const initial: State = {
   wTemplate: "push",
   wSets: {},
   customTpls: [],
+  hiddenTpls: {},
   exDetails: {},
   theme: "dark",
   focusTotalMin: 25,
@@ -173,7 +181,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
 
   const toastT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeLevel = useRef(0);
-  const snoozedAt = useRef(0);
+  const lastNudgeAt = useRef(0);
 
   useEffect(() => {
     (async () => {
@@ -189,9 +197,15 @@ export const [StoreProvider, useStore] = createContextHook(() => {
             Array.isArray(saved.anchors) &&
             saved.anchors.length === seedAnchors.length &&
             saved.anchors.every((a) => seedAnchors.some((s) => s.id === a?.id));
+          const withTimes = {
+            ...saved,
+            // Merge rather than replace: a blob written before an anchor
+            // existed would otherwise leave that time undefined.
+            times: { ...initial.times, ...(saved.times ?? {}) },
+          };
           const merged = validAnchors
-            ? saved
-            : { ...saved, anchors: seedAnchors.map((a) => ({ ...a })) };
+            ? withTimes
+            : { ...withTimes, anchors: seedAnchors.map((a) => ({ ...a })) };
           setState(merged.dayKey === todayKey() ? merged : rollDay(merged));
         }
       } catch {
@@ -229,7 +243,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
    */
   const armNudge = useCallback(() => {
     if (nudge) return;
-    if (Date.now() - snoozedAt.current < 30_000) return;
+    if (Date.now() - lastNudgeAt.current < NUDGE_GAP_MS) return;
     const lvl = Math.min(nudgeLevel.current, 2);
     if (state.water === 0) {
       setNudge({
@@ -240,6 +254,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
         kind: "water",
       });
       nudgeLevel.current += 1;
+      lastNudgeAt.current = Date.now();
     } else if (state.food === null) {
       setNudge({
         text: [
@@ -249,11 +264,15 @@ export const [StoreProvider, useStore] = createContextHook(() => {
         kind: "food",
       });
       nudgeLevel.current += 1;
+      lastNudgeAt.current = Date.now();
     }
   }, [nudge, state.water, state.food]);
 
-  const dismissNudge = useCallback((snooze: boolean) => {
-    if (snooze) snoozedAt.current = Date.now();
+  const dismissNudge = useCallback(() => {
+    // Dismissing restarts the same three-hour gap; "later" is not a shorter
+    // snooze, because a reminder that returns in a minute is the thing people
+    // turn off entirely.
+    lastNudgeAt.current = Date.now();
     setNudge(null);
   }, []);
 
@@ -262,6 +281,7 @@ export const [StoreProvider, useStore] = createContextHook(() => {
     if (nudge.kind === "water") update((s) => ({ water: s.water + 1 }));
     else update({ food: "ate" });
     nudgeLevel.current = 0;
+    lastNudgeAt.current = Date.now();
     setNudge(null);
   }, [nudge, update]);
 

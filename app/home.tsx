@@ -174,6 +174,8 @@ export default function Home() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16, gap: 18 }}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="interactive"
       >
         {/* next 3 */}
         <View>

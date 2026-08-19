@@ -10,6 +10,7 @@ import type { AnchorTimes } from "@/lib/types";
 const clampDay = (min: number) => Math.max(0, Math.min(23 * 60 + 30, min));
 
 const rows: { id: keyof AnchorTimes; icon: string; label: string; sub: string }[] = [
+  { id: "wake", icon: "sun-horizon", label: copy.setup.rows.wake.label, sub: copy.setup.rows.wake.sub },
   { id: "meds", icon: "pill", label: copy.setup.rows.meds.label, sub: copy.setup.rows.meds.sub },
   { id: "lunch", icon: "bowl-food", label: copy.setup.rows.lunch.label, sub: copy.setup.rows.lunch.sub },
   { id: "gym", icon: "barbell", label: copy.setup.rows.gym.label, sub: copy.setup.rows.gym.sub },
@@ -63,7 +64,7 @@ export default function Setup() {
           ))}
 
           <T size={11.5} color={t.neutral[600]} style={{ marginTop: 4, lineHeight: 17 }}>
-            {copy.setup.wakeNote(fmtTime(s.times.meds - 30))}
+            {copy.setup.wakeNote}
           </T>
         </View>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Circle } from "react-native-svg";
 
@@ -72,6 +72,10 @@ export default function Focus() {
 
   return (
     <Screen>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
@@ -215,6 +219,7 @@ export default function Focus() {
           />
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

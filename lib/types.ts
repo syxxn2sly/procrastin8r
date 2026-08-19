@@ -47,6 +47,8 @@ export type Meal = {
 
 /** The five movable points the rest of the day is laid out around. */
 export type AnchorTimes = {
+  /** Set directly rather than derived from meds, so it can be moved on its own. */
+  wake: number;
   meds: number;
   lunch: number;
   gym: number;
@@ -55,6 +57,8 @@ export type AnchorTimes = {
 
 export type WorkoutTemplate = {
   id: string;
+  /** Built-ins can be hidden but not deleted; yours can be edited and deleted. */
+  custom?: boolean;
   name: string;
   icon: string;
   sub: string;

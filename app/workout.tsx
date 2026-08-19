@@ -7,7 +7,7 @@ import { Btn, Card, Field, IconBtn, Kicker, Screen, T, useTheme } from "@/compon
 import { radius } from "@/constants/theme";
 import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
-import { MAX_TEMPLATES, builtInTemplates, customIcons } from "@/lib/workouts";
+import { BLANK_DETAIL, MAX_TEMPLATES, builtInTemplates, customIcons } from "@/lib/workouts";
 import type { WeekDay } from "@/lib/types";
 
 const week: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -20,33 +20,83 @@ export default function Workout() {
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEx, setNewEx] = useState("");
+  /** null = the form is creating; an id = it is editing that template. */
+  const [editingTpl, setEditingTpl] = useState<string | null>(null);
   const [voice, setVoice] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
 
-  const templates = { ...builtInTemplates, ...Object.fromEntries(s.customTpls.map((c) => [c.id, c])) };
-  const current = templates[s.wTemplate] ?? builtInTemplates.push;
+  const templates = Object.fromEntries(
+    Object.entries({
+      ...builtInTemplates,
+      ...Object.fromEntries(s.customTpls.map((c) => [c.id, { ...c, custom: true }])),
+    }).filter(([id]) => !s.hiddenTpls[id]),
+  );
+  const current = templates[s.wTemplate] ?? Object.values(templates)[0] ?? builtInTemplates.push;
   const canAdd = Object.keys(templates).length < MAX_TEMPLATES;
 
-  const saveNewTemplate = () => {
-    const name = newName.trim();
-    if (!name || !canAdd) return;
-    const id = `c${Date.now()}`;
-    const ex = newEx
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean)
-      .map((n, i): [string, string, string] => [
-        `${id}-${i}`,
-        n.charAt(0).toUpperCase() + n.slice(1),
-        "tap to add weight · reps",
-      ]);
+  const closeForm = () => {
+    setNewOpen(false);
+    setEditingTpl(null);
+    setNewName("");
+    setNewEx("");
+  };
 
+  /**
+   * Editing reuses the create form rather than adding a second one. Exercise
+   * detail lines already logged against a name are carried over, so renaming
+   * the template does not wipe the numbers underneath it.
+   */
+  const openForEdit = (id: string) => {
+    const tpl = templates[id];
+    if (!tpl?.custom) return;
+    setEditingTpl(id);
+    setNewOpen(true);
+    setNewName(tpl.name);
+    setNewEx(tpl.ex.map(([, name]) => name).join(", "));
+  };
+
+  const buildEx = (id: string): [string, string, string][] => {
+    const names = newEx.split(",").map((x) => x.trim()).filter(Boolean);
+    return names.map((n, i) => [
+      `${id}-${i}`,
+      n.charAt(0).toUpperCase() + n.slice(1),
+      s.exDetails[`${id}-${i}`] ?? BLANK_DETAIL,
+    ]);
+  };
+
+  const saveTemplate = () => {
+    const name = newName.trim();
+    if (!name) return;
+
+    if (editingTpl) {
+      const ex = buildEx(editingTpl);
+      s.update({
+        customTpls: s.customTpls.map((c) =>
+          c.id === editingTpl
+            ? {
+                ...c,
+                name,
+                sub: ex.length ? `${ex.length} ${ex.length === 1 ? "lift" : "lifts"} · yours` : "yours",
+                ex: ex.length ? ex : [[`${editingTpl}-0`, name, "log it your way"]],
+              }
+            : c,
+        ),
+      });
+      closeForm();
+      s.cheer(copy.toast.templateUpdated);
+      return;
+    }
+
+    if (!canAdd) return;
+    const id = `c${Date.now()}`;
+    const ex = buildEx(id);
     s.update({
       customTpls: [
         ...s.customTpls,
         {
           id,
+          custom: true,
           name,
           icon: customIcons[s.customTpls.length % customIcons.length],
           sub: ex.length ? `${ex.length} ${ex.length === 1 ? "lift" : "lifts"} · yours` : "yours",
@@ -55,10 +105,31 @@ export default function Workout() {
       ],
       wTemplate: id,
     });
-    setNewOpen(false);
-    setNewName("");
-    setNewEx("");
+    closeForm();
     s.cheer(copy.toast.templateSaved);
+  };
+
+  /**
+   * Yours are deleted outright; the built-ins are only hidden, since they are
+   * code rather than data and there is nothing to delete. Either way the week
+   * plan has to let go of it or the calendar points at a template that is gone.
+   */
+  const deleteTemplate = (id: string) => {
+    const tpl = templates[id];
+    if (!tpl) return;
+    const weekPlan = Object.fromEntries(
+      Object.entries(s.weekPlan).map(([d, v]) => [d, v === id ? null : v]),
+    ) as typeof s.weekPlan;
+    const remaining = Object.keys(templates).filter((x) => x !== id);
+
+    s.update({
+      weekPlan,
+      customTpls: tpl.custom ? s.customTpls.filter((c) => c.id !== id) : s.customTpls,
+      hiddenTpls: tpl.custom ? s.hiddenTpls : { ...s.hiddenTpls, [id]: true },
+      wTemplate: s.wTemplate === id ? (remaining[0] ?? "") : s.wTemplate,
+    });
+    closeForm();
+    s.cheer(copy.toast.templateDeleted);
   };
 
   return (
@@ -67,6 +138,8 @@ export default function Workout() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 20, gap: 12 }}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="interactive"
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
@@ -84,6 +157,9 @@ export default function Workout() {
                 <Pressable
                   key={id}
                   onPress={() => s.update({ wTemplate: id })}
+                  onLongPress={() => openForEdit(id)}
+                  delayLongPress={450}
+                  accessibilityLabel={tpl.custom ? copy.a11y.editTemplate(tpl.name) : tpl.name}
                   style={{
                     flexGrow: 1,
                     minWidth: 96,
@@ -108,7 +184,7 @@ export default function Workout() {
             })}
             {canAdd ? (
               <Pressable
-                onPress={() => setNewOpen((v) => !v)}
+                onPress={() => (newOpen ? closeForm() : setNewOpen(true))}
                 accessibilityLabel={copy.a11y.newTemplate}
                 style={{
                   width: 44,
@@ -135,12 +211,21 @@ export default function Workout() {
                 style={{ backgroundColor: t.bg, fontSize: 12 }}
               />
               <Btn
-                label={copy.workout.saveTemplate}
+                label={editingTpl ? copy.workout.updateTemplate : copy.workout.saveTemplate}
                 variant="primary"
                 size={12}
                 style={{ paddingVertical: 9 }}
-                onPress={saveNewTemplate}
+                onPress={saveTemplate}
               />
+              {editingTpl ? (
+                <Btn
+                  label={copy.workout.deleteTemplate}
+                  variant="quiet"
+                  size={12}
+                  style={{ paddingVertical: 9 }}
+                  onPress={() => deleteTemplate(editingTpl)}
+                />
+              ) : null}
             </Card>
           ) : null}
         </View>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
@@ -30,6 +30,10 @@ export default function Capture() {
 
   return (
     <Screen>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <IconBtn icon="arrow-left" size={32} label={copy.a11y.back} onPress={() => router.back()} />
@@ -78,7 +82,7 @@ export default function Capture() {
                     {s.inbox.length}
                   </T>
                 </View>
-                <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 6 }}>
+                <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 6 }} keyboardShouldPersistTaps="handled">
                   {s.inbox.map((item, i) => (
                     <Card
                       key={`${item}-${i}`}
@@ -216,6 +220,7 @@ export default function Capture() {
           </View>
         ) : null}
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

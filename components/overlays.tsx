@@ -62,7 +62,10 @@ export function Nudge() {
 
   useEffect(() => {
     if (!eligible) return;
-    const id = setInterval(armNudge, 14_000);
+    armNudge();
+    // The gap is enforced in the store; this only has to poll often
+    // enough to notice when three hours have passed.
+    const id = setInterval(armNudge, 60_000);
     return () => clearInterval(id);
   }, [eligible, armNudge]);
 
@@ -108,7 +111,7 @@ export function Nudge() {
       </T>
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Btn label={nudge.doLabel} variant="primary" size={12} onPress={applyNudge} style={{ flex: 1 }} />
-        <Btn label={copy.nudge.later} variant="quiet" size={12} onPress={() => dismissNudge(true)} />
+        <Btn label={copy.nudge.later} variant="quiet" size={12} onPress={dismissNudge} />
       </View>
     </View>
   );

@@ -14,12 +14,10 @@ import type { AnchorTimes } from "@/lib/types";
 const clampDay = (min: number) => Math.max(0, Math.min(23 * 60 + 30, min));
 
 type Row = {
-  id: keyof AnchorTimes | "wake";
+  id: keyof AnchorTimes;
   icon: string;
   label: string;
   sub: string;
-  /** Wake is derived from meds rather than set directly, so it cannot be nudged. */
-  fixed?: boolean;
 };
 
 export default function EditDay() {
@@ -28,7 +26,7 @@ export default function EditDay() {
   const [newBlock, setNewBlock] = useState("");
 
   const rows: Row[] = [
-    { id: "wake", icon: "sun-horizon", label: copy.editDay.rows.wake.label, sub: copy.editDay.rows.wake.sub, fixed: true },
+    { id: "wake", icon: "sun-horizon", label: copy.editDay.rows.wake.label, sub: copy.editDay.rows.wake.sub },
     { id: "meds", icon: "pill", label: copy.editDay.rows.meds.label, sub: copy.editDay.rows.meds.sub },
     { id: "lunch", icon: "bowl-food", label: copy.editDay.rows.lunch.label, sub: copy.editDay.rows.lunch.sub },
     {
@@ -40,13 +38,8 @@ export default function EditDay() {
     { id: "wind", icon: "moon-stars", label: copy.editDay.rows.wind.label, sub: copy.editDay.rows.wind.sub },
   ];
 
-  const timeOf = (r: Row) => (r.id === "wake" ? s.times.meds - 30 : s.times[r.id as keyof AnchorTimes]);
-
-  const nudge = (r: Row, delta: number) => {
-    if (r.fixed) return;
-    const key = r.id as keyof AnchorTimes;
-    s.update({ times: { ...s.times, [key]: clampDay(s.times[key] + delta) } });
-  };
+  const nudge = (r: Row, delta: number) =>
+    s.update({ times: { ...s.times, [r.id]: clampDay(s.times[r.id] + delta) } });
 
   const moveBlock = (id: string, delta: number) =>
     s.update({
@@ -83,7 +76,9 @@ export default function EditDay() {
           {copy.editDay.intro}
         </T>
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="interactive">
           {rows.map((r) => (
             <Card
               key={r.id}
@@ -100,7 +95,7 @@ export default function EditDay() {
               </View>
               <IconBtn icon="caret-left" label={copy.a11y.earlier(r.label)} onPress={() => nudge(r, -30)} />
               <T size={14} weight="medium" tabular style={{ width: 56, textAlign: "center" }}>
-                {fmtTime(timeOf(r))}
+                {fmtTime(s.times[r.id])}
               </T>
               <IconBtn icon="caret-right" label={copy.a11y.later(r.label)} onPress={() => nudge(r, 30)} />
             </Card>

@@ -40,3 +40,6 @@ export const builtInTemplates: Record<string, WorkoutTemplate> = {
 export const MAX_TEMPLATES = 7;
 
 export const customIcons = ["hand-fist", "heartbeat", "bicycle", "mountains"];
+
+/** Exercises typed into the template form start with no numbers attached. */
+export const BLANK_DETAIL = "tap to add weight · reps";

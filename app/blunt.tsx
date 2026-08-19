@@ -38,6 +38,8 @@ export default function Blunt() {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingTop: 8 }}
           keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="interactive"
         >
           {s.tasks.map((task, i) => (
             <Pressable
